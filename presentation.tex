@@ -315,11 +315,17 @@
     \frametitle{4.3: ロジスティック回帰による分類}
     % この章では、シグモイド関数を用いて得られた確率をどのように分類決定に結びつけるか、また実用的な特徴量の扱いについて解説されている
     \begin{alertblock}{分類決定のルール}
-        シグモイド関数によって計算された確率$P(y = 1|x)$を元に、以下のルールで最終的なクラスを決定する
-        \begin{itemize}
-            \item 決定境界\\通常、閾値は0.5に設定
-            \item 判定\\確率が0.5より大きければ、「はい（クラス１）」、そうでなければ「いいえ（クラス０）」と判定
-        \end{itemize}
+        シグモイド関数によって計算された確率$P(y = 1|x)$を元に、以下のルールで最終的なクラス（0か1）を決定する
+        \\「確率が0.5を超える場合はクラス1に、それ以外の場合はクラス0と判定」\footnote{この基準値となる0.5は決定境界と呼ばれる}
+        \begin{eqnarray*}
+            decision(x) = 
+            \left\{
+            \begin{alignedat}{2}
+                1 \quad &if \quad P(y-1|x) > 0.5& \\
+                0 \quad &otherwise&
+            \end{alignedat}
+            \right.
+        \end{eqnarray*}
     \end{alertblock}
 \end{frame}
 
@@ -328,7 +334,15 @@
     \begin{alertblock}{感情分析の具体例}
         映画のレビューの感情分析を例とすると、計算プロセスは以下のようになる
         \begin{itemize}
-            \item 特徴量の抽出\\ポジティブな単語の数、ネガティブな単語の数、「no」、代名詞の数、感嘆符の有無、文書の長さ（対数）などの特徴量ベクトル$x$を作成する
+            \item 以下の特徴量を抽出し、特徴量ベクトル$\boldsymbol{x}$を作成する
+            \begin{itemize}
+                \item $x_1$：ポジティブな単語の出現数
+                \item $x_2$：ネガティブな単語の出現数
+                \item $x_3$："no"という単語が含まれるか（0か1）
+                \item $x_4$：1人称・2人称代名詞の出現数
+                \item $x_5$：感嘆符"!"が含まれるか（0か1）
+                \item $x_6$：文書の総単語数の対数
+            \end{itemize}
             \item 重みの適応\\学習済みの重み$w$とバイアス$b$を用いて加重和を計算し、シグモイド関数を通すことで、そのレビューが肯定的である確率（例えば0.70）を算出する
         \end{itemize}
     \end{alertblock}
@@ -336,15 +350,76 @@
 
 \begin{frame}
     \frametitle{4.3: ロジスティック回帰による分類}
-    \begin{alertblock}{特徴量の設計とスケーリング}
-        テキスト分類における特徴量の扱いについて、いくつか重要な手法が存在する
+    \begin{alertblock}{感情分析の具体例}
+        \centering
+        \includegraphics[scale=0.55]{etc/4-3table.png}
+        \includegraphics[scale=0.5]{etc/fig4.2.png}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    \begin{alertblock}{感情分析の具体例}
+        学習済みモデルより、以下のことが判明している
         \begin{itemize}
-            \item 特徴量設計
-            \begin{itemize}
-                \item 古典的な手法：人間の言語的直感に基づいた設計
-                \item 最近のNLPでの主流：表現学習（Representation learning）を用いて、入力から自動的に特徴量を学習する
-            \end{itemize}
-            \item スケーリング\\特徴量ごとに値の範囲が大きく異なる場合、標準化（z-score）や0から1への正規化を行い、比較可能な範囲に揃える。単語数などのデータには、対数を取ることも一般的である
+            \item 特徴量の重み：$[2.5, -5.0, -1.2, 0.5, 2.0, 0.7]$
+            \item バイアス項：$b=0.1$
+        \end{itemize}
+        % 以下の計算を行うことで、このレビューがポジティブかネガティブかを判定する
+        \begin{eqnarray*}
+            P(+|x) &=& P(y=1|x) \\
+                   &=& \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
+                   &=& \sigma([2.5, -5.0, -1.2, 0.5, 2.0, 0.7] \cdot [3, 2, 1, 3, 0, 4.10] + 0.1) \\
+                   &=& \sigma(.833) \\
+                   &=& 0.70 \\
+            P(-|x) &=& P(y=0|x) \\
+                   &=& 1 - \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
+                   &=& 0.30
+        \end{eqnarray*}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    \begin{alertblock}{特徴量の設計}
+        \begin{itemize}
+            \item ロジスティック回帰では、入力のあらゆる性質を特徴量として利用できる
+            \item 例： 「ピリオドの曖昧性解消」\\ピリオドが文末 （EOS）か単語の一部（略語など）かを判定
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    \begin{alertblock}{特徴量の設計とスケーリング}
+        \begin{itemize}
+            \item 単語の属性\\現在の単語が小文字であれば、その後のピリオドは文末である可能性が高く、正の重みを与える
+            \item 辞書情報\\その単語が略語辞書（"Prof."など）に含まれていれば、負の重みが与えられる
+            \item 特徴量の相互作用\\複数の条件を組み合わせた複雑な特徴量。例えば、「現在の単語が"St."であり、かつ前の単語が固有名詞（大文字）である」場合、それは文末ではなく、「通り名（Street）」の略称である可能性が高い
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    \begin{alertblock}{特徴量の設計と自動生成}
+        特徴量を設計する方法には、歴史的な変遷といくつかの手法がある
+        \begin{itemize}
+            \item 手設計\\古典的なモデルでは、言語的な直感やエラー分析に基づいて人間が手作業で特徴量を設計していた
+            \item 特徴量テンプレート\\特徴量を自動生成するための抽象的な仕様。例えば「ピリオドの前の2単語の組み合わせ」を全て特徴量にするよう指定すれば、訓練データに現れるペアに基づいて大量の特徴量が自動的に生成される。これらはハッシュ関数を用いて一意の整数（特徴量番号）に変換される
+            \item 表現学習\\近年のNLPの主流であり、入力データから有用な特徴量を自動的かつ教示なしで学習する手法
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    \begin{alertblock}{入力特徴量のスケーリング}
+        異なる特徴量が極端に異なる値の範囲（例：1か0のフラグと、数千に及ぶ単語カウント）を持つ場合、それらを比較可能な範囲に調整することが必要
+        \begin{itemize}
+            \item 標準化：平均を0、標準偏差を1に変換
+            \item 正則化：値を0から1の範囲に収める変換
+            \item 対数変換：単語の出現頻度のように、一部の様子が極端に大きな値を持つ分布に対して有効
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -354,8 +429,8 @@
     \begin{alertblock}{ベクトル化による効率的な処理}
         大量のテスト事例を高速に処理するために、行列演算（ベクトル化）が利用される
         \begin{itemize}
-            \item 行列演算\\複数の事例を１行ずつにまとめた入力行列$X$と重みベクトル$w$、バイアスベクトル$b$を用いることで、前事例の予測確率を一括で計算する
-            \item 数式\\$\hat{y} = \sigma(Xw + b)$という単一の行列演算として表現する
+            \item 行列演算\\複数の事例を１行ずつにまとめた入力行列$\boldsymbol{X}$と重みベクトル$\boldsymbol{w}$、バイアスベクトル$\boldsymbol{b}$を用いることで、前事例の予測確率を一括で計算する
+            \item 数式\\$\boldsymbol{\hat{y}} = \sigma(\boldsymbol{X} \boldsymbol{w} + \boldsymbol{b})$という単一の行列演算として表現する
             \item 利点\\現代のハードウェアやコンパイラはこの行列計算を非常に効率的に行えるため、大規模なデータセットの処理が大幅に高速化される
         \end{itemize}
     \end{alertblock}
