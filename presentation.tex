@@ -1,0 +1,1482 @@
+% !TEX program = lualatex
+
+\documentclass[unicode,11pt]{beamer} % スライド用のレイアウト
+\usepackage{luatexja} % Beamer単体では日本語を出力できないのでこれを使う
+\usepackage{amsmath, amssymb, bm, ascmac, multicol, xcolor}
+\renewcommand{\kanjifamilydefault}{\gtdefault} % 漢字をゴシック体に指定
+\usetheme{metropolis}
+\title{輪講発表スライド}
+\author{B4 鈴木青衣}
+\date{\today}
+
+\begin{document}
+\begin{frame}
+    \maketitle
+\end{frame}
+
+\begin{frame}
+    \frametitle{目次}
+    \begin{block}{Chap4: ロジスティック回帰とテキスト分類}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{目次}
+    \begin{block}{Chap5: 埋め込み}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+% --------------------------------------------------------------------
+% Chap4 --------------------------------------------------------------
+% --------------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+% Chap4 概要 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: 概要}
+
+    \begin{alertblock}{分類の重要性}
+        文字や単語、顔の認識、メールの仕分けなど、入力をカテゴリに割り当てる「分類」は、
+        言語処理と知性の核心である
+    \end{alertblock}
+
+    \begin{exampleblock}{テキスト分類タスクの例}
+        \begin{itemize}
+            \item 感情分析(映画や商品のレビュー) 
+            \item スパムの検知, 言語の識別, 著者の特定
+            \item LLMにおける次単語予測
+        \end{itemize}
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Chap4: 概要}
+    \begin{alertblock}{ロジスティック回帰を学ぶ必要性}
+        \begin{itemize}
+            \item ニューラルネットワークの基礎理解
+            % ニューラルネットワークはロジスティック回帰を組み合わせたものであるため、その仕組みを理解することは重要である。
+            \item 重要概念の導入
+            % シグモイド関数, ソフトマックス関数, ロジット, 勾配降下法といった現代のAI技術に必要な基本的なアイデアを理解するのに必要なツール
+            \item 分析ツールとしての評価
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.1 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item {\color{red}\textbf{機械学習と分類}}
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.1: 機械学習と分類}
+    \begin{alertblock}{分類の目標}
+        単一の入力($x$)を受け取り、そこから有用な特徴量を抽出、あらかじめ定義された離散的なクラスの集合($Y$)のいずれかに分類すること。
+        \begin{itemize}
+            \item 入力$x$: \\感情分析であればレビュー文、言語識別であれば判定対象のテキストなど
+            \item 出力$y$: \\感情分析なら \{positive,negative\} や \{0,1\}、言語識別なら言語のリスト（例：\{Abkhaz,Ainu, Albanian, ...,Zulu\}
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% \begin{frame}
+%     \frametitle{4.1: 機械学習と分類}
+%     \begin{block}{画像分類の例}
+%         \begin{multicols}{3}
+%             \centering
+%             \includegraphics[scale=0.3]{./etc/mnist_three.png}
+%             \includegraphics[scale=0.3]{./etc/mnist_three.png}
+%             \includegraphics[scale=0.3]{./etc/mnist_three.png}
+%         \end{multicols}
+%     \end{block}
+% \end{frame} 
+
+\begin{frame}
+    \frametitle{4.1: 機械学習と分類}
+    \begin{alertblock}{分類を実現するための３つの手法}
+        \begin{itemize}
+            \item 人間による手書きのルール \\ 「"love"があれば肯定的」と言ったルールを作成 \\ 状況の変化に弱く、複雑な特徴同士の相互作用をヒトが全て記述するのは困難
+            \item LLMへのプロンプト \\ モデルのラベルをつけるよう指示を出す \\ ハルシネーションが起きたり、何故そのクラスを選んだのか説明できなかったりする
+            \item 教師あり機械学習(スタンダード) \\ 入力$x$と正解ラベル$y$のペアからなるラベル付き訓練セットを使用 \\ 学習アルゴリズムによってモデルを構築
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.1: 機械学習と分類}
+    \begin{alertblock}{確立的分類器の４つの構成要素}
+        % ロジスティック回帰のような確率的分類器は、単にクラスを割り当てるだけでなく、そのクラスに属する「確率」も算出する
+        % これらは共通して４つの要素で構成される。
+        \begin{itemize}
+            \item 特徴量表現 \\ 入力$x$を、特徴量ベクトル$[x_1, x_2, ..., x_n]$に変換する 
+            \item 分類関数 \\ シグモイド関数やソフトマックス関数を用いて、各クラスに属する確率を計算する
+            \item 目的関数 \\ 学習において最小化したいエラー（予測と正解のずれ）を測定する(交差エントロピー関数など)
+            \item 最適化アルゴリズム \\ 目的関数を最小化するようにパラメータを更新する手順(確率的勾配降下法など)
+        \end{itemize}
+        
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.1: 機械学習と分類}
+    \begin{alertblock}{機械学習による分類の２つの段階}
+        % 機械学習による分類は、大きく分けて２つの段階を経て行われる
+        \begin{itemize}
+            \item 学習（training）\\訓練セットと勾配降下法を以ていいて、モデルのパラメータである重み$w$とバイアス$b$を決定する
+            \item テスト（test）\\学習済みのモデルに未知の事例$x$を入力して確率を計算し、最も確率の高いラベルを返す
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.2 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item {\color{red}\textbf{シグモイド関数}}
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{4.2: シグモイド関数}
+    %この章では、２値ロジスティック回帰において、入力を確率に変換する中心的な仕組みについて解説されている
+    \begin{alertblock}{2値分類の目標と数値化}
+        \begin{itemize}
+            \item 目標\\新しい入力観測値$x$に対して、特定のクラスに属する可動化の２値決定(0か1か)を行う分類器を学習すること
+            \item 確率の計算\\クラスを割り当てるだけでなく、観測値がクラス１に属する確率$P(y = 1|x)$を求める
+            \item 重みづけとバイアス\\学習を通じて、書く特徴量$x_i$の重要度を表す重み$w_i$とバイアス項$b$を決定する。
+            % 重みが生ならその特徴量はポジティブな判定の根拠となり、負ならネガティブな根拠となる
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.2: シグモイド関数}
+    \begin{alertblock}{加重和$z$の算出}
+        テスト事例の判定時には、各特徴量にその重みを掛け合わせ、バイアスを加算した単一の数値$z$を算出する
+        \\数学的には、重みベクトル$w$と特徴ベクトル$x$の内積を用いて、$z = w ・ x + b$と表現される
+        \\この$z$は$-\infty$から$\infty$の範囲の実数値を取るため、そのままでは$0$から$1$の確率として扱えない
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.2: シグモイド関数}
+
+    \begin{alertblock}{シグモイド関数の役割}
+        $z$を0から1の範囲に変換するために、シグモイド関数（またはロジスティック関数）を使用する
+        \\実数値を確率として適切な範囲に変換できるだけでなく、微分可能であるため、学習のプロセスにおいて非常に適している
+    \end{alertblock}
+    \centering
+    \includegraphics[scale=0.7]{./etc/sigmoid.png}
+\end{frame}
+
+% Sction 4.3 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item {\color{red}\textbf{ロジスティック回帰による分類}}
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    % この章では、シグモイド関数を用いて得られた確率をどのように分類決定に結びつけるか、また実用的な特徴量の扱いについて解説されている
+    \begin{alertblock}{分類決定のルール}
+        シグモイド関数によって計算された確率$P(y = 1|x)$を元に、以下のルールで最終的なクラスを決定する
+        \begin{itemize}
+            \item 決定境界\\通常、閾値は0.5に設定
+            \item 判定\\確率が0.5より大きければ、「はい（クラス１）」、そうでなければ「いいえ（クラス０）」と判定
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    \begin{alertblock}{感情分析の具体例}
+        映画のレビューの感情分析を例とすると、計算プロセスは以下のようになる
+        \begin{itemize}
+            \item 特徴量の抽出\\ポジティブな単語の数、ネガティブな単語の数、「no」、代名詞の数、感嘆符の有無、文書の長さ（対数）などの特徴量ベクトル$x$を作成する
+            \item 重みの適応\\学習済みの重み$w$とバイアス$b$を用いて加重和を計算し、シグモイド関数を通すことで、そのレビューが肯定的である確率（例えば0.70）を算出する
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    \begin{alertblock}{特徴量の設計とスケーリング}
+        テキスト分類における特徴量の扱いについて、いくつか重要な手法が存在する
+        \begin{itemize}
+            \item 特徴量設計
+            \begin{itemize}
+                \item 古典的な手法：人間の言語的直感に基づいた設計
+                \item 最近のNLPでの主流：表現学習（Representation learning）を用いて、入力から自動的に特徴量を学習する
+            \end{itemize}
+            \item スケーリング\\特徴量ごとに値の範囲が大きく異なる場合、標準化（z-score）や0から1への正規化を行い、比較可能な範囲に揃える。単語数などのデータには、対数を取ることも一般的である
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.3: ロジスティック回帰による分類}
+    \begin{alertblock}{ベクトル化による効率的な処理}
+        大量のテスト事例を高速に処理するために、行列演算（ベクトル化）が利用される
+        \begin{itemize}
+            \item 行列演算\\複数の事例を１行ずつにまとめた入力行列$X$と重みベクトル$w$、バイアスベクトル$b$を用いることで、前事例の予測確率を一括で計算する
+            \item 数式\\$\hat{y} = \sigma(Xw + b)$という単一の行列演算として表現する
+            \item 利点\\現代のハードウェアやコンパイラはこの行列計算を非常に効率的に行えるため、大規模なデータセットの処理が大幅に高速化される
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.4 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item {\color{red}\textbf{ロジスティック回帰による学習}}
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.4: ロジスティック回帰における学習}
+    % この章では、モデルのパラメータである重み$w$とバイアス$b$がどのように決定（学習）するかという基本的な考え方が解説されている。
+    % 具体的な数式やアルゴリズムの詳細に入る前の、何を（損失）どのように（最適化）するかという全体像を説明している
+    \begin{alertblock}{学習の目的}
+        ロジスティック回帰の学習は、教師あり学習の一種であり、各事例$x$に対して、正解ラベル$y$（0または1）が既知の状態で行われる
+        \begin{itemize}
+            \item 目標\\システムが算出する確率$\hat{y}$（$y = 1$である確率の推定値）を、実際の正解ラベル$y$にできるだけ近づけるようなパラメータ$w$と$b$を見つけること
+            \item 具体的な動作\\正解$y$が1の場合は、予測値$\hat{y}$ができるだけ1に近づくように、正解$y$が0の場合は、予測値$\hat{y}$ができるだけ0に近くなるようにする
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.4: ロジスティック回帰における学習}
+    \begin{alertblock}{学習に必要な2つの要素}
+        \begin{itemize}
+            \item 損失関数\\システムの予測$\hat{y}$と正解ラベル$y$との距離や誤差を測定する指標。ロジスティック回帰やニューラルネットワークでは、一般に交差エントロピー関数が用いられる
+            \item 最適化アルゴリズム\\損失関数の値を最小化するために、重みを反復的に更新していく手順。標準的な手法として、勾配降下法、特に確率的勾配降下法がある
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.5 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item {\color{red}\textbf{交差エントロピー損失関数}}
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.5: 交差エントロピー損失関数}
+    % この章では、モデルの予測がいかに正解に近いかを測定するための指標について解説している
+    \begin{alertblock}{損失関数の目的}
+        分類器の出力である$\hat{y}$（入力$x$がクラス1である確率の推定値）と、実際の正解ラベル$y$（0または1）がどれだけ離れているかを測定する必要がある
+        \\この距離を測る指標を損失関数（loss function）または費用関数（cost function）と呼ぶ
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.5: 交差エントロピー損失関数}
+    \begin{alertblock}{条件付き最大尤度測定と交差エントロピー}
+        ロジスティック回帰では、訓練データにおける正解ラベルの対数確率\footnote{確率$p$を対数$log(p)$に変換した値。計算の安定化や情報量の表現を目的に使用される}を最大化するようなパラメータ$(w, b)$を選択する条件付き最大尤度推定という手法を取る
+        \\この手法から導き出される損失関数が、負の対数尤度損失であり、一般に交差エントロピー損失と呼ばれる
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.5: 交差エントロピー損失関数}
+    \begin{alertblock}{数学的定義}
+        1つの事例$x$に対する交差エントロピー損失$L_{CE}$は以下の式で表される
+        \begin{equation}
+            L_{CE}(\hat{y}, y) = -[y \log \hat{y} + (1 - y) \log (1 - \hat{y})]
+        \end{equation}
+        ここに、$\hat{y} = \sigma(w ・ x + b)$を代入すると、パラメータを用いた具体的な計算式になる
+        \\この式は、$y = 1$のときは$-\log\hat{y}$を計算し、$y = 0$のときは$-\log(1 - \hat{y})$を計算することを意味している
+    \end{alertblock}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.5: 交差エントロピー損失関数}
+    \begin{alertblock}{損失関数の性質と直感}
+        \begin{itemize}
+            \item 予測が正しい場合\\予測確率が正解（０または１）に近づくほど、損失は０（最小）に近づく
+            \item 予測が外れた場合\\予測が正解から遠ざかるほど、損失は無限大に向かって急激に増加する
+        \end{itemize}
+        この性質により、正しいクラスの確率を最大化することは、同時に誤ったクラスの確立を最小化することにつながる
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.5: 交差エントロピー損失関数}
+    \begin{alertblock}{具体的な計算例}
+        映画レビューの感情分析を例にとると、以下のようになる
+        正解が「肯定的（$y = 1$）」で、モデルの予測が$0.70$の場合：損失は$0.36$
+        \\もし実際には「否定的（$y = 0$）」だった場合：損失は$1.2$
+        \\このように、モデルが確信を持って間違えるほど、大きなペナルティ（高い損失値）が課される仕組みになっている。
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.6 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item {\color{red}\textbf{勾配降下法}}
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
+    % この章では、損失関数を最小化し、モデルの最適な重みを決定するための中心ていなアルゴリズムについて解説している
+    \begin{alertblock}{勾配降下法の目的と直感}
+        \begin{itemize}
+            \item 目標\\全ての事例にわたる平均的な損失関数$L$を最小化するパラメータ$\theta$（重み$w$とバイアス$b$）のセットを見つけること
+            \item 直感的なイメージ\\深い谷底へ最も早く降りようとしているハイカー。ハイカーは周囲を見渡し、最も急な斜面を探して、その反対横行へと一歩進む。これを繰り返すことで最小値（谷底）を目指す
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% \def\thefootnote{\fnsymbol{footnote}}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
+    \begin{alertblock}{凸関数の性質}
+        ロジスティック回帰の損失関数は凸関数であるという重要な性質を持っている
+        \\凸関数には局所的な最小値（ローカルミニマ）が存在せず、最小値は1つ（グローバルミニマ）だけである。
+        \\そのため、どのような初期値から始めても、勾配降下法によって確実に最小値を見つけることができる\footnote{対照的に、多層ニューラルネットワークの損失関数は非凸であり、局所解に陥る可能性がある}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
+    \begin{alertblock}{学習率（$\eta$）の役割}
+        学習率（$\eta$）とは、勾配（傾き）の方向にどれだけの歩幅でパラメータを更新するかを決定するハイパーパラメータである
+        \\学習率が高すぎると、最小値を飛び越えてしまう。逆に低すぎると、更新が遅すぎて収束に時間がかかりすぎる
+        \\最初は高い学習率ではじめ、学習が進む（イテレーションを重ねる）について徐々に下げていく手法が一般的
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
+    \begin{alertblock}{アルゴリズムの種類}
+        % データの処理方法によって、以下の3つの手法を分けて用いる
+        \begin{itemize}
+            \item 確率的勾配効果法（SGD）\\1つのランダムな訓練事例ごとに勾配を計算し、パラメータを即座に更新するオンラインアルゴリズム\footnote{全ての入力データを最初から把握できない状況で、データが１つずつ逐次的に入力されるたびに、その時点で最適な判断や処理を行なっていくアルゴリズム}である。動きはギザギザになるが、逐次処理が可能
+            \item バッチ学習\\データセット全体の勾配を計算してから一度だけ更新する。最も正確な方向を計算できるが、大規模なデータでは非常に時間がかかる
+            \item ミニバッチ学習\\SGDとバッチ学習の中間的な手法で、小さなデータのまとまりごとに勾配を計算する。GPUなどのハードウェアでベクトル化して並列処理を行うのに適しており効率的
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
+    \begin{alertblock}{パラメータ更新の数式}
+        パラメータ$\theta$の更新は、以下の式で行われる
+        \begin{equation}
+            \theta_{t+1} = \theta_t - \eta\Delta L
+        \end{equation}
+        $\Delta L $は損失関数の勾配（各変数に関する偏微分のベクトル）であり、微小な変化が全体の損失にどう影響するかを示している
+        \\ロジスティック回帰における重み$w_j$の勾配は、非常に直感的な形式である「（予測値$\hat{y}$ - 正解$y$）× 入力$x_j$」となる
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.7 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item {\color{red}\textbf{多項ロジスティック回帰}}
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.7: 多項ロジスティック回帰}
+    % この章では、4つ以上のクラスに分類が必要な場合のアルゴリズムについて解説されている
+    \begin{alertblock}{多クラス分類の必要性}
+        ２値分類だけでなく、実務では以下のような多クラスへの分類が必要になることが多く、これに対応するのが多項ロジスティック回帰である
+        \begin{itemize}
+            \item ３値感情分析\\ポジティブ、ネガティブ、ニュートラル
+            \item 品詞タグ付け\\10から50種類以上の品詞からの選択
+            \item 大規模言語モデル（LLM）\\数万語規模の語彙の候補から次の単語の予測をする「$|V|$クラス分類」
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.7: 多項ロジスティック回帰}
+    \begin{alertblock}{ソフトマックス関数}
+        多項ロジスティック回帰では、シグモイド関数を一般化したソフトマックス関数を使用し、
+        各クラス$k$に属する確率$P(y_k = 1 | x)$を計算する
+        \\任意のスコアのベクトル$z$を受け取り、各要素が0から1の範囲にあり、かつ合お系が1になる確率分布に変換する
+        \\シグモイドと同様に、大きな値を持つ入力の確率を一に近づけ、他の小さな値の確率を抑制する性質がある。
+        シグモイドへの入力と同様、ソフトマックスへの入力ベクトルもロジット（logits）と呼ばれる
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.7: 多項ロジスティック回帰}
+    \begin{alertblock}{重み行列$W$とバイアスベクトル$b$}
+        2値分類では1つの重みベクトルを使用したが、多クラス分類ではクラスごとに個別の重みベクトル$w_k$とバイアス$b_k$をもつ
+        \begin{itemize}
+            \item 重み行列\\これらをまとめたものを重み行列$W$（形状は[クラス数K × 特徴量数]）として扱う
+            \item 計算式\\$\hat{y} = softmax(W x + b)$
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.7: 多項ロジスティック回帰}
+    \begin{alertblock}{プロトタイプとしての解釈}
+       重み行列$W$の各行$w_k$は、そのクラスのプロトタイプ（典型例）と見なすことができる
+       \\入力ベクトル$x$と各クラスの重み$w_k$の内積は類似度として機能する
+       \\入力$x$が$K$個のプロトタイプのどれに最も似ているかを学習しているといえる 
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.7: 多項ロジスティック回帰}
+    \begin{alertblock}{特徴量の動作}
+        多項ロジスティック回帰における特徴量は、クラスごとに異なる重みを与える
+        \\例えば、感情分析において「感嘆符（！）」という特徴量は、ポジティブクラスとネガティブクラスには正の重みを持ち、ニュートラルクラスには負の重みを持つ、といったことが可能
+        \\このように、特徴量の重みが入力$x$と出力クラス$y$の両方に依存することを明示するため、特徴量を$f(x, y)$と表記することもある
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.8 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item {\color{red}\textbf{多項ロジスティック回帰による学習}}
+            \item 評価指標について（適合率, 再現率, F値）
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.8:多項ロジスティック回帰における学習}
+    % この章では、3つ以上のクラスを扱う場合のモデルの学習（パラメータの決定）方法について解説している
+    \begin{alertblock}{損失関数の一般化}
+        多項ロジスティック回帰の損失関数は、２値ロジスティック回帰の交差エントロピー損失を$K$個のクラスに拡張したもの
+        \begin{itemize}
+            \item 正解ラベル$y$\\正解クラス$c$の要素だけが1で、他は全て0である長さ$K$のベクトル（one-hotベクトル）として表現される
+            \item 予測値$\hat{y}$\\各クラス$k$に対する予測確率$P(y_k = 1|x)$を並べたベクトル
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.8:多項ロジスティック回帰における学習}
+    \begin{alertblock}{負の対数尤度損失}
+        1つの事例$x$に対する損失$L_{CE}$は、全クラスにわたる和として以下のように定義される
+        \begin{equation}
+            L_{CE}(\hat{y}, y) = - \sum_{k = 1}^K y_k log \hat{y_k}
+        \end{equation}
+
+        $y$はone-hotベクトルであるため、正解クラス$c$以外の項は全て0になる。そのため、この式は最終的に、
+        「正解クラスに対する予測確率の負の対数」のみとなる。
+        \begin{equation}
+            L_{CE}(\hat{y}, y) = - log \hat{y_k}
+        \end{equation}
+
+        このため、多項ロジスティック回帰の損失関数は、一般に負の対数尤度損失と呼ばれる
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.8:多項ロジスティック回帰における学習}
+    \begin{alertblock}{勾配の計算}
+        勾配降下法を用いて重みを更新するために、損失関数の勾配（微分）を計算する
+        \\特定のクラス$k$の$i$番目の重み$w_{k,i}$に関する偏微分は、以下のような直感的な式で表される
+        \begin{equation}
+            \frac{\partial L_{CE}}{\partial w_{k, i}} = -(y_k - \hat{y)k})x_i
+        \end{equation}
+
+        これは、クラス$k$の正解（0または1）と予測確率の差に入力値$x_i$をかけたものであり、２値ロジスティック回帰の勾配と本質的に同じ形式である
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.9 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item {\color{red}\textbf{評価指標について（適合率, 再現率, F値）}}
+            \item テストセットと交差検証
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
+    % この章では、テキスト分類器の性能をどのように測定するかについて解説されている
+    \begin{alertblock}{混同行列}
+        分類システムの性能を可視化するために、人間の手による正解ラベル（gold label）とシステムの出力を評価する混同行列という表を作成する
+        \begin{itemize}
+            \item 真陽性（True Positive / TP）ヒット率
+            \item 偽陽性（False Positive / FP）
+            \item 偽陰性（False Negative / FN）
+            \item 真陰性（True Negative / TN）
+        \end{itemize}
+        \centering
+        \includegraphics[scale=0.4]{etc/評価指標.png}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
+    \begin{alertblock}{正解率（Accuracy）とその限界}
+        正解率：全事例のうち、システムが正しく判定した割合
+        \\一見自然な指標に見えるが、クラスの頻度が不均衡な場合には適さない
+        \\例えば、100万件のツイートのうち特定の話題が100件しかない場合、全てを「その話題ではない」と判定する無能な分類器でも99.99正解率を出せてしまう
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
+    \begin{alertblock}{適合率（Precision）と再現率（Recall）}
+        不均衡なデータにおいて「稀なケースをどれだけ正しく見つけられたか」を測るために、以下の2つの指標を用いる
+        \begin{itemize}
+            \item 適合率（Precision）\\システムが正と判定したもののうち、実際に正解だった割合
+            \begin{equation*}
+                Precision = \frac{TP}{TP+FP}
+            \end{equation*}
+            \item 再現率（Recall）\\実際に正解であるもののうち、システムが正しく判定できた割合
+            \begin{equation*}
+                Recall = \frac{TP}{TP + FN}
+            \end{equation*}
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
+    \begin{alertblock}{F値}
+        F値：適合率と再現率を1つの指標にまとめたもの
+        \\一般的には、両者を等しく重視するF1スコアが使われる
+        \\F1スコア：適合率と再現率の調和平均
+        \\算術平均ではなく調和平均を使うのは、どちらか一方が教区単に低い場合に、より保守的（低い値）に評価するため
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
+    \begin{alertblock}{多クラス分類の評価}
+        3つ以上のクラス（至急、通常、スパム）を評価する場合、クラスごとに適合率と再現率を計算し、以下の2つの方法で集計する
+        \begin{itemize}
+            \item マクロ平均\\クラスごとに指標を計算し、それらを単純に平均する
+            \\出現頻度の低いクラスの性能を重視したい場合に適している
+            \item マイクロ平均\\全クラスの決定を1つの混同行列に合算してから指標を計算する
+            \\出現頻度の高いクラスの影響を強く受ける
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 4.10 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap4: ロジスティック回帰とテキスト分類}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 機械学習と分類
+            \item シグモイド関数
+            \item ロジスティック回帰による分類
+            \item ロジスティック回帰による学習
+            \item 交差エントロピー損失関数
+            \item 勾配降下法
+            \item 多項ロジスティック回帰
+            \item 多項ロジスティック回帰による学習
+            \item 評価指標について（適合率, 再現率, F値）
+            \item {\color{red}\textbf{テストセットと交差検証}}
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.10: テストセットと交差検証}
+    % この章では、モデルの性能を正しく評価するためのデータの扱い方について解説している
+    \begin{alertblock}{標準的な学習とテストの手順}
+        テキスト分類の学習・テスト手順は、言語モデルと同様のプロセスを辿る
+        \begin{itemize}
+            \item 学習セット\\モデルの学習に使用
+            \item 開発テストセット\\パラメータの調整や、最適なモデルを選択するために使用
+            \item テストセット\\最終的なモデルの性能を報告するために使用される、それまで一度も見ていないデータ
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.10: テストセットと交差検証}
+    \begin{alertblock}{交差検証の導入}
+        固定された学習・開発・テストセットを用いる場合、データを学習用に多く割くと、テストセットや開発セットが十分に代表的なサイズにならないという問題が生じることがある
+        \\この解決策として交差検証が用いられる
+        \begin{itemize}
+            \item 手順：データを$k$個の互いに素なサブセット（フォールド）に分割する
+            \item 繰り返し：そのうち1つのフォールドをテスト用、残りの$k-1$個を学習用として使い、これを$k$回繰り返す
+            \item 評価：$k$回の実行で得られたエラー率を平均して、最終的な平均値を算出する
+            \item 10分割交差検証：$k=10$とする場合、データの90\%で学習し、10回テストを行ってその値を平均する
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.10: テストセットと交差検証}
+    \begin{alertblock}{交差検証の注意点と実用的なアプローチ}
+        交差検証には、すべてのデータがテストに使用されるため、特徴量設計などの際にデータを調査して「覗き見」をしてしまい、性能尾を大幅に落としてしまうリスクがある
+        \\このため、実務では固定された学習セットとテストセットを最初に作成するのが一般的
+        \\その上で、学習セットないだけで10分割交差検証を行い、最終的なエラー率の算出は独立した固定テストセットで行うという手法が取られる
+    \end{alertblock}
+\end{frame}
+
+% --------------------------------------------------------------------
+% Chap5 --------------------------------------------------------------
+% --------------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item {\color{red}\textbf{語彙意味論}}
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Chap5: 概要}
+    % Chapter5では、単語の意味をベクトルで表現する「埋め込み」の直感的なアイデアと、
+    % 現代の自然言語処理におけるその重要性について解説している
+    \begin{alertblock}{コンテキストと分布仮説}
+        \begin{itemize}
+            \item 生物学的アナロジー\\異なる環境で進化した動物が似た構造を持つ「収斂進化」があり、似た文脈（コンテキスト）に表される単語は似た意味を持つ
+            \item 分布仮説の定義\\単語の分布の類似性と意味の類似性が結びついているという仮説。例えば、眼科医と目医者のような類義語は、似た環境に出現する傾向にある
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Chap5: 概要}
+    \begin{alertblock}{ベクトル意味論と埋め込み}
+        テキストの中の単語の分布から直接限定された、意味のあるベクトル表現のことを指す
+        \\ベクトル意味論は、埋め込みとその意味を研究する言語学の分野
+        \\埋め込みはLLMなどのいづれの年代的なアプリケーションの中にある
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Chap5: 概要}
+    \begin{alertblock}{表現学習}
+        \begin{itemize}
+            \item 自動学習への移行\\特徴量エンジニアリングによって作業で表現を生成するのではなく、現代の$NLP$における重要な原則だ
+            \item 自己教師あり学習\\手作業でラベルをつけた信号を必要とせず、言語データ自体から表現を学習する方法
+        \end{itemize}
+        この章では、これらの基礎を踏まえ、単語の意味をどのようにモデルかすべきかという「語彙意味論」の具体的な議論が行われる
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.1 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item {\color{red}\textbf{語彙意味論}}
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.1: ベクトル意味論とその直感}
+    % この章では、単語の意味をどのように表現すべきかという基本原則と、モデルが備えるべき要件について解説されている
+    \begin{alertblock}{単語の意味表現の課題}
+        \begin{itemize}
+            \item 従来のNLP（n-gramモデルなど）では、単語は単なる文字の羅列や語彙リストのインデックスとして扱われてきた
+            \item しかし、単に単語を大文字にするような表現は、意味モデルとしては不十分
+            \item 優れた意味モデルには、単語間の類似性（catとdogは似ている）、対義性（coldとhotは反対）、共起性（happyは肯定的、sadは否定的）、および同一事象に対する異なる視点（buyとsell）などを捉える能力が求められる
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.1: ベクトル意味論とその直感}
+    \begin{alertblock}{見出し語と語義}
+        \begin{itemize}
+            \item 見出し語：辞書に掲載される基本の形\\miceの見出し語はmouse、sangやsungの見出し語はsing。これに対し、実際に使われるsungやcarpetsなどの携帯は語形と呼ばれる
+            \item 語義：一つの見出し語が持つ複数の意味の側面を指す\\mouseにはネズミ（齧歯類）とマウス（入力機器）ということなる語義がある
+            \item 多義性：一つの見出し語が複数の語義を持つ性質のこと\\文脈からどの語義が使われているか判断する「語義曖昧性解消」というタスクが必要になる
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.1: ベクトル意味論とその直感}
+    \begin{alertblock}{同義性}
+        \begin{itemize}
+            \item 2つの語義が同一、またはほど同一の意味を持つ場合、それらは同義語と呼ばれる（couchとsofa）
+            \item 厳密な定義では、文中で入れ替えても文の審議条件が変わらないものを指す。実際には、「対比の原則」により、形式が異なれば意味もわずかに異なる（科学的な$H_2O$と日常的なwater）ため、実用的には「大まかな同義性」として扱われる
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.1: ベクトル意味論とその直感}
+    \begin{alertblock}{単語の類似性と関連性}
+        \begin{itemize}
+            \item 類似性\\同義語ではないが、catとdogのように概念が似ている関係を指す
+            \item 関連性\\特徴は似てないが、日常的な事象で共起する関係を指す（coffeeとcap、外科医とメス）
+            \item 意味領域\\病院（外科医、メス、看護師）やレストラン（ウェイター、メニュー、シェフ）のように、特定のドメインをカバーし、互いに関連し合う単語の集合
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.1: ベクトル意味論とその直感}
+    \begin{alertblock}{共起性}
+        \begin{itemize}
+            \item 単語が読み手や書き手に与える感情的な影響や影響を指す（wonderfulは肯定的、drearyは否定的）
+            \item 感情的な意味は、感情価（快・不快）、覚醒度（感情の強さ）、支配度（制御の度合い）の3つの次元で測定される
+            \item これら3つの数値をベクトル（空間上の点）として扱う考え方が、現代のベクトル意味論の先駆けとなった
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.2 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item {\color{red}\textbf{ベクトル意味論とその直感}}
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.2: ベクトル意味論とその直感}
+    % この章では、現代の自然言語処理（NLP）における標準的な単語表現手段であるベクトルイミ論の革新的なアイデアが解説されている
+    \begin{alertblock}{ベクトル意味論の成り立ち}
+        ベクトル意味論は、1950年代の2つの大きなアイデアが融合して生まれた
+        \begin{itemize}
+            \item 空間表現\\オズグッド（1957）による、単語の共起性を3次元空間上の点で表現するというアイデア
+            \item 分布仮説\\言語学者（Joos, Harris, Firthら）による、単語の意味はその周辺に現れる単語や文法環境（分布）によって定義されるという提案。これらを背景に、「非常に似た分布で現れる単語は、似た意味を持つ」という直感的な考えが基礎となっている。
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.2: ベクトル意味論とその直感}
+    \begin{alertblock}{未知の単語を理解する直感}
+        広東語からの借用語「ongchoi（空芯菜）」を例に、その意味を推測するプロセスを以下に示す
+        \begin{itemize}
+            \item 「ongchoiは炒めると美味しい」「ご飯の上に乗せると最高だ」「塩気のあるソースとongchoiの葉」といった文脈を目にする
+            \item 同時に、「ほうれん草」や「フダンソウ」も「ニンニクと炒める」「ご飯の上」といった度応用の文脈で使われることを知っていれば、ongchoiもそれらと同様の「葉物野菜」であると推測できる
+            \item コンピュータ上では、ongchoiの文脈に出現する単語をカウントすることで、この直感を実装する
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.2: ベクトル意味論とその直感}
+    \begin{alertblock}{埋め込みの定義}
+        \begin{itemize}
+            \item 単語の近傍語の分布から導き出された、多次元の意味空間上の点として単語を表現したものを「埋め込み」と呼ぶ
+            \item 例えば、sweetという単語の近くには、意味的に関連のあるhoney, candy, chocolateといった単語が配置される
+            \item このように意味の似た単語が高次元空間で「隣人」として配置されることで、言語モデルやNLPアプリケーションに強力な能力を与える
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.2: ベクトル意味論とその直感}
+    \begin{alertblock}{ベクトル意味論の利点}
+        \begin{itemize}
+            \item 汎化性能\\分類器が学習時に見ていない単語であっても、その埋め込みが学習済みの単語と似ていれば、適切に意味を判断できる
+            \item 自己教師あり学習\\手作業によるラベル付けを必要とせず、大量のテキストから自動的に学習することが可能
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.2: ベクトル意味論とその直感}
+    \begin{alertblock}{学習モデルと類似度の測定}
+        \begin{itemize}
+            \item スペクトルの広さ\\非常に長くて様子のほとんどが0である疎ベクトル（単純なカウントベース）から、word2vecのような短く密な密ベクトルまで様々なモデルが存在する
+            \item 類似度の測定\\2つの単語（あるいは文や文書）がどれだけ似ているかを計算する標準的な手法として、ベクトル間の角度を用いる「コサイン類似度」が導入されている
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.3 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item {\color{red}\textbf{単純なカウントベースの埋め込み}}
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.3: 単純なカウントベースの埋め込み}
+    % この章では、単語の共起頻度に基づいてベクトルを生成する最も基本的な手法について解説されている
+    \begin{alertblock}{共起行列}
+        共起行列：単語がどれだけ頻繁に一緒に現れるか（共起するか）を表現するための行列
+        \begin{itemize}
+            \item 単語-文脈行列\\このセクションではこの特定の形式が導入されている
+            \item 構成\\行列の各行は語彙内のターゲット単語を表し、各列は文脈として現れる単語を指す
+            \item 要素の値\\各セルには、あるターゲット単語（行）の近くに特定の文脈単語（列）が訓練コーパスないで何回出現したかのカウントが記録される
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.3: 単純なカウントベースの埋め込み}
+    \begin{alertblock}{文脈窓}
+        文脈窓：「単語の近く」を定義するための範囲
+        \\通常、ターゲット単語の左側に数単語、右側に数単語という「窓」を設定する（例：前後４単語ずつなど）
+        \\この範囲内に出現した単語をカウントの対象とする
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.3: 単純なカウントベースの埋め込み}
+    \begin{alertblock}{ベクトルの特性と次元数}
+        \begin{itemize}
+            \item 行ベクトル\\各列の各行が、その単語を表現するベクトルとなる
+            \item 次元数\\行列のサイズは、$|V| \times |V|$（$|V|$は語彙数）隣、ベクトルの次元数も語彙数（通常1万から5万語）に一致する
+            \item 疎ベクトル\\ほとんどの単語は互いに共起しないため、ベクトルの要素のほとんどは0になる。これを疎な表現という
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.3: 単純なカウントベースの埋め込み}
+    \begin{alertblock}{類似性の直感}
+        似た意味を持つ単語は、似たような文脈で現れるため、そのベクトルも似たものになる
+        \begin{itemize}
+            \item cherryとstrawberryは、どちらもpieやsugerといった単語と共起しやすいため、ベクトル空間上で近い位置に配置される
+            \item 一方で、digitalやinformationといった単語はdataやcomputerと共起しやすく、果物の単語とは異なるベクトルを持つ
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.3: 単純なカウントベースの埋め込み}
+    \begin{alertblock}{重み付け}
+        単なる出現回数（生カウント）をそのまま使うだけでなく、tf-idfなどの重み付関数を適応して、特定の文脈単語の重要性を調整することも一般的である
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.4 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item {\color{red}\textbf{コサイン類似度}}
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.4: コサイン類似度}
+    % この章では、2つの単語（ベクトル）がどの程度似ているかを数値化する標準的な指標について解説されている
+    \begin{alertblock}{類似度測定の必要性}
+        2つのターゲット単語（ベクトル$v$と$w$）の類似度を図るには、それらのベクトルを受け取って類似度の度合いを返す指標が必要
+        \\NLPっで最も一般的に使われる指標は、2つのベクトルがなす角のコサインである
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.4: コサイン類似度}
+    \begin{alertblock}{内積とその限界}
+        コサイン類似度は、線形代数の内積に基づいている
+        \begin{itemize}
+            \item 内積の性質\\2つのベクトルが同じ次元で大きな値を持つほど、内積の値は大きくなる。逆に、異なる次元に値を持つ（直交する）ベクトルの内積は0になる
+            \item 問題点\\生の内積は長いベクトル（頻出語）を優遇してしまうという欠点がある。頻出語は共起する単語が多く、各次元の値が大きくなるため、単語の意味の似ていなさにこだわらず内積が大きくなってしまう
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.4: コサイン類似度}
+    \begin{alertblock}{コサイン類似度の定義}
+        頻度の影響を排除し、純粋に「向き（意味）」の似ている度合いを測るために、内積をそれぞれのベクトルの長さで割って正規化する。これがコサイン類似度である
+        \begin{itemize}
+            \item 数式
+            \begin{equation*}
+                cos(v, w) = \frac{v \cdot w}{|v| |w|}
+            \end{equation*}
+            \item 値の範囲\\同じ方向を向いていれば１（最大）、直交していれば０、逆方向なら-1となる。NLPで扱う頻度ベースのベクトルの場合、要素が0から1の範囲に収まる
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.4: コサイン類似度}
+    \begin{alertblock}{具体的な計算例}
+        informationがcherryとdigitalのどちらに近いかを、Wikipediaコーパスの統計値を用いて計算する
+        \\$cos(cherry, information) = 0.018$
+        \\$cos(digital, information) = 0.996$
+        \\この結果から、モデルはinformationがcherryよりもdigitalに圧倒的に近いと正しく判断できる
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.4: コサイン類似度}
+    \begin{alertblock}{直感的な理解}
+        ベクトルが似ているほど、なす角は小さくなり、コサインの値は1に近づく。図5.5では、digitalとinformationのベクトルがなす角が非常に狭いことが示されている
+        \\この指標は、言い換えの発見、単語の意味の変化の追跡、あるいは未知の単語の意味の自動発見といったタスクに広く利用されている
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.5 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item {\color{red}\textbf{Word2vec}}
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    % この章では、現代のNLPにおいて極めて重要な、短く密なベクトル表現である「埋め込み（Embeddings）」を作成するための強力な手法について解説されている
+    \begin{alertblock}{密ベクトル（埋め込み）の利点}
+        これまでのカウントベースのベクトル（疎ベクトル）は語彙数$|V|$と同じ非常に長い次元を持ち、そのほとんどが0だった。これに対し、埋め込みは以下の特徴を持つ
+        \begin{itemize}
+            \item 次元の短縮\\通常50から1000次元程度と非常にコンパクト
+            \item 学習の効率化\\パラメータ数が少ないため、分類器が学習しやすく、繁華性のが高まり過学習を防ぐことができる
+            \item 同義性の補足\\疎ベクトルではcarとautomobileは全く別次元として扱われるが、密ベクトルはこれらの類似性をうまく捉えることができる
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{alertblock}{Word2vecの直感：分類としての学習}
+        Word2vecの革新的なアイデアは、共起回数を「数える」のではなく、バイナリ分類タスクとしてモデルを訓練することである
+        \begin{itemize}
+            \item タスク\\「単語cは単語wの近くに出現するか？」という問いに答える分類器を訓練する
+            \item 自己教師あり学習\\実際のテキストで近くにある単語ペアを「正解」とし、ランダムに選んだ単語ペアを「不正解」とみなすことで、手作業のラベルなしで大量のデータから自動学習する
+            \item 重みの利用\\予測タスクそのものが目的ではなく、その過程で学習された分類器の重み（パラメータ）を単語の埋め込みとして利用する
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{alertblock}{Skip-gramとネガティブサンプリング（SGNS）}
+        Word2vecの中でも特に広く使われるSkip-gram with negative sampling(SGNS)アルゴリズムの詳細を以下に記す
+        \begin{itemize}
+            \item 正の事例\\ターゲット単語（例：apricot）と、その前後数単語のウィンドウ内にある実際の文脈語（例：jam）のペア
+            \item 負の事例（ネガティブサンプリング）\\ターゲット単語と、語彙からランダムに選ばれたノイズ語（例：aardvark）のペアをk個作成する
+            \item 分類の仕組み\\2つのベクトルの内積をシグモイド関数に通して確率を算出する。ターゲットと文脈語の内積は大きく、ノイズ語との内積は小さくなるように学習する
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{alertblock}{学習プロセス}
+        \begin{itemize}
+            \item 損失関数\\正解のペアの確立を最大化し、ノイズのペアの確立を最小化するように設計された損失関数を最小化する
+            \item 最適化\\確率的勾配降下法（SGD）を用いて、各ステップで少しずつベクトル（重み）を更新していく
+            \item 2つの行列\\システムは各単語について「ターゲットとしてのベクトル」と「文脈としてのベクトル」の2つの行列（WとC）を保持する
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{alertblock}{その他の静的な埋め込み}
+        Word2vecの他にも、いくつかの重要な手法がある
+        \begin{itemize}
+            \item Fasttext\\単語を文字のn-gram（部分文字列）の集合として表現することで、未知の単語や珍しい語形にも対応できるようにしたモデル
+            \item GloVe(Global Vectors)\\コーパス全体の統計（共起確率の比率）に基づいて学習を行う手法
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.6 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item {\color{red}\textbf{埋め込みの可視化}}
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.6: 埋め込みの可視化}
+     % この章では、100次元以上にもなる高次元の単語ベクトルを、人間が理解しやすい形でどのように表現するかという手法について解説している
+     % 抽象的な数値の羅列である埋め込みベクトルを、具体的な意味の地図として解釈するための道具立てを提供している
+    \begin{alertblock}{視覚の目的}
+        埋め込みを視覚化することは、単語の意味モデルを理解し、適用し、改善するために常用である。しかし、100次元といった多次元ベクトルを直接見ることは不可能であるため、情報を圧縮する技術が必要となる
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.6: 埋め込みの可視化}
+    \begin{alertblock}{最も単純な方法：類似単語のリストアップ}
+        ある単語wの意味を視覚化する最も簡単な方法は、語彙ないの全ての単語をwとのコサイン類似度でソートし、上位の単語を並べることである
+        \\例えば、GloVeアルゴリズムを用いた場合、frogに近い単語として、frogs, toad（ヒキガエル）, litoria（アマガエル族）などがリストアップされる
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.6: 埋め込みの可視化}
+    \begin{alertblock}{階層的クラスタリング}
+        埋め込み空間において、どの単語が互いに似ているかを階層的なツリー構造で示す手法。これにより、単語感の意味的なグループ分けを視覚的に把握できる
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.6: 埋め込みの可視化}
+    \begin{alertblock}{次元圧縮による投影}
+        t-SNEは、100次元などの高次元空間を2次元に投射する方法で、現在最も一般的に使われている。
+        \begin{itemize}
+            \item t-SNE\\最もポピュラーの投影方法の一つ
+            \item 視覚的効果\\意味の似た単語が2次元平面上の近い場所に「点」として配置されるため、空間的な広がりとして意味の関係性を理解できる（図5.1, 5.9）
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.7 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item {\color{red}\textbf{埋め込みの意味的特性}}
+            \item バイアスと埋め込み
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.7: 埋め込みの意味的特性}
+    % この章では、単語ベクトルが捉えることができる多様な意味関係や、それらを制御する要因について解説している
+    % 埋め込みは単なる単語の類似度だけでなく、複雑な関係性や歴史的な変容までを多次元空間の中に保持していることが示されている　
+    \begin{alertblock}{類似性と関連性の種類}
+        埋め込みがどのような情報を学習するかは、カウントに使用する文脈窓のサイズに大きく依存する
+        \begin{itemize}
+            \item 短い文脈窓（前後1から2単語）\\より構文的（syntactic）な情報を捉える傾向がある。ターゲット単語と最も似ている単語は、同じ品詞で意味も似ている単語（例：ある学校名に対して別の学校名）になる
+            \item 長い文脈窓（前後5から10単語）\\よりトピック的（topical）な関連性を捉える傾向がある。例えば、「ホグワーツ」に対して、別の学校名ではなく「ダンブルドア」や「マルフォイ」といった同じ作品内の関連用語が上位に来やすくなる
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.7: 埋め込みの意味的特性}
+    \begin{alertblock}{類似性と関連性の種類}
+        また、単語間の結びつきを以下の2つに区別している
+        \begin{itemize}
+            \item 1次共起\\「書く」と「本」のように、実際に近くに現れる関係（連語的関連）
+            \item 2次共起\\「書く」と「言う」のように、周囲の単語（文脈）が似ている関係（類型的関連）
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.7: 埋め込みの意味的特性}
+    \begin{alertblock}{類推（アナロジー）と関係の類似性}
+        埋め込みは「$a$と$b$の関係は、$a^*$と$b^*$の関係と同じである」という関係の意味を捉える能力を持っている
+        \begin{itemize}
+            \item 平行四辺形モデル\\ベクトルの加減算によって類推問題を解く手法
+            \item 有名な例\\「king - man + woman」を計算すると、「queen」に近いベクトルが得られる
+            \item この性質により、男女の関係だけでなく、国と主との関係（パリ：フランス = ローマ：イタリア）や、比較級・最上級といった形態論的な関係も捉えることができる
+            \item ただし、このモデルは単純すぎて人間の認知プロセスを完全には模倣できていないと言う指摘や、頻出語以外では精度が落ちると言う注意点もある
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.7: 埋め込みの意味的特性}
+    \begin{alertblock}{歴史的意味論}
+        埋め込みは、時代ごとのテキストから別々のベクトル空間を作成することで、単語の意味が時間の経過とともにどう変化したかを分析するツールとしても使われる
+        \begin{itemize}
+            \item gay: かつての「快活な（cheerful）」と言う意味から、現代の同性愛を指す意味へ
+            \item broadcast: 元々の「種をまく」と言う意味から、ラジオやテレビの「放送」へ
+            \item awful: 「畏怖に満ちた（full of awe）」と言うポジティブなニュアンスから、現代の「ひどい（terrible）」と言うネガティブな意味への悪化（pejoration）
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.8 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item {\color{red}\textbf{バイアスと埋め込み}}
+            \item ベクトルモデルの評価
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.8: バイアスと埋め込み}
+    % この章では、単語の埋め込みが訓練データに含まれる潜在的な偏見やステレオタイプを再現・増幅してしまう問題について解説している
+    \begin{alertblock}{ステレオタイプの再現}
+        埋め込みはテキストから意味を学習する一方で、その中に潜む不適切なバイアスも学習している
+        \begin{itemize}
+            \item 類推による露呈\\類推モデル（$a : b = a^* : b^*$）において、不適切な関係性が現れることがある
+            \item 具体的な例\\ニュース記事で学習したword2vecにおいて、「コンピュータプログラマ - 男 + 女」の計算家かが「主婦」になったpreview、「父 : 医者 = 母 : 看護師」といった類推が示されるケースがある
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.8: バイアスと埋め込み}
+    \begin{alertblock}{割り当ての害}
+        バイアスが含まれた埋め込みを実際のシステムに組み込むと、リソース（仕事やローンなど）が特定のグループに不当に配分される「割り当ての害」を引き起こす可能性がある
+        \\例えば、採用システムが埋め込みを利用している場合、医師やプログラマーを探す検索において、女性の名前が含まれる書類を不当に低く評価してしまうリスクがある
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.8: バイアスと埋め込み}
+    \begin{alertblock}{バイアスの増幅}
+        埋め込みの深刻な問題の1つに、入力テキストに含まれる統計的なバイアスを単に反映するだけでなく、それをさらに強めてしまう（増幅させる）性質があるというものがある
+        \begin{itemize}
+            \item 性別に関連する単語は、元のテキスト統計よりも埋め込み空間においてより強く性別化される傾向にある
+            \item 実際の労働統計よりも、埋め込みにおける職業と性別の結びつきの方が誇張されることが研究で示されている
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.8: バイアスと埋め込み}
+    \begin{alertblock}{表現の害と潜在連合テスト}
+        埋め込みは、人間が持つ無意識の連合（潜在的な偏見）もエンコードする
+        \begin{itemize}
+            \item 潜在連合テスト（IAT）\\人間が「花と心地よい単語」を「昆虫と不快な単語」よりも素早く結びつけるといった反応速度を図るテスト
+            \item 再現\\GloVeベクトルを用いた研究では、アフリカ系アメリカ人の名前が不快な単語と高いコサイン類似度をもち、ヨーロッパ系アメリカ人の名前が心地よい単語と高い類似度を持つといった、人間のIAT結果と一致するバイアスが確認されている
+            \item これは、特定の社会グループを卑下したり無視したりする「表現の害」につながる
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.8: バイアスと埋め込み}
+    \begin{alertblock}{バイアスの除去とその限界}
+        研究者たちは、性別の定義的な意味は維持しつつステレオタイプを除去するための空間変換手法などを開発している
+        \\しかし、これらの手法でバイアスを軽減することはできても、完全に排除することはでいないことが明らかとなっており、現在も未解決の課題（オープン・プロブレム）として残っている
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.8: バイアスと埋め込み}
+    \begin{alertblock}{歴史的分析の応用}
+        逆にこのバイアスを利用して歴史的なステレオタイプの変化を測定する研究も行われている
+        \begin{itemize}
+            \item 20世紀全体の歴史的テキストから作成した埋め込みを分析することで、職業（司書や大工など）と性別・民族名の結びつきが当時の実際の雇用統計と相関していることが確認された
+            \item また、「賢い」「思慮深い」といったの王力に関する形容詞が、かつては女性よりも男性と強く結びついていたこと、そしてそのバイアスが1960年以降徐々に減少していることなどが数値化されている
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+% Sction 5.9 --------------------------------------------------------------
+
+\begin{frame}
+    \frametitle{Chap5: 埋め込み}
+    \begin{block}{}
+        \begin{enumerate}
+            \item 語彙意味論
+            \item ベクトル意味論とその直感
+            \item 単純なカウントベースの埋め込み
+            \item コサイン類似度
+            \item Word2vec
+            \item 埋め込みの可視化
+            \item 埋め込みの意味的特性
+            \item バイアスと埋め込み
+            \item {\color{red}\textbf{ベクトルモデルの評価}}
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \frametitle{ベクトルモデルの評価}
+    % この章では、作成した単語ベクトルの質をどのように測定するか、その評価手法と注意点について解説している
+    \begin{alertblock}{外部評価・内部評価}
+        \begin{itemize}
+            \item 外部評価：最も重要とされる評価指標。ベクトルを実際のNLPタスク（感情分析・質疑応答など）に埋め込み、そのタスクの性能が向上するかどうかを確認する
+            \item 内部評価\\
+            \begin{itemize}
+                \item 手法：実際のタスクとは切り離し、アルゴリズムが算出した類似度スコアと、人間が割り当てた評価値との相関をテストする
+                \item 代表的なデータセット
+                \begin{itemize}
+                    \item WordSim-353：353個の名詞ペアに対する類似度評価
+                    \item SimLex-999：単なる関連性（例：コップとコーヒー）ではなく、厳密な意味での類似性（コップとマグカップ）を定量化する、より複雑なデータセット
+                    \item TOEFLデータセット：4つの選択肢から適切な同義語を選ぶ80問のテスト
+                \end{itemize}
+            \end{itemize}
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{ベクトルモデルの評価}
+    \begin{alertblock}{文脈と文レベルの評価}
+        \begin{itemize}
+            \item 文脈付き似度\\単語を単体で評価するのではなく、「文の中での意味」を評価する手法。SCWS（文中の単語ペア評価）や、同じ単語が異なる文脈で同じ意味かを問うWiC（Word-in-Context）などがある
+            \item 文レベルの類似度（STS）\\2つの文がどの程度似ているかを人間がつけたスコアと比較する
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{ベクトルモデルの評価}
+    \begin{alertblock}{類推タスク}
+        「$a : b =  a^* : b^*$」という形式の問題（例：王：男＝女王：女）を解く能力を測定する。形態論（単数・複数）、語彙関係、百科事典的知識など、さまざまなカテゴリーをカバーするタスクセットがある
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{ベクトルモデルの評価}
+    \begin{alertblock}{注意点・変動性}
+        \begin{itemize}
+            \item 埋め込みアルゴリズム（特にword2vecなど）には、初期値のランダム性やネガティブサンプリングの影響により、結果に固有の変動性が生じる
+            \item そのため、特定のコーパスでの単語の関連性を研究する場合などは、ブートストラップ法などを用いて複数の埋め込みを学習させ、その結果を平均することがベストプラクティスとされている
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\end{document}
