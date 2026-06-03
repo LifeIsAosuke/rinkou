@@ -219,11 +219,19 @@
     %この章では、２値ロジスティック回帰において、入力を確率に変換する中心的な仕組みについて解説されている
     \begin{alertblock}{2値分類の目標と数値化}
         \begin{itemize}
-            \item 目標\\新しい入力観測値$x$に対して、特定のクラスに属する可動化の２値決定(0か1か)を行う分類器を学習すること
+            \item 目標\\新しい入力観測値$x$に対して、特定のクラスに属するかどうか（0か1か）を判定すること
             \item 確率の計算\\クラスを割り当てるだけでなく、観測値がクラス１に属する確率$P(y = 1|x)$を求める
-            \item 重みづけとバイアス\\学習を通じて、書く特徴量$x_i$の重要度を表す重み$w_i$とバイアス項$b$を決定する。
-            % 重みが生ならその特徴量はポジティブな判定の根拠となり、負ならネガティブな根拠となる
+            \item 重みづけとバイアス\\学習を通じて、各特徴量$x_i$の重要度を表す重み$w_i$とバイアス項$b$を決定する
         \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.2: シグモイド関数}
+    %この章では、２値ロジスティック回帰において、入力を確率に変換する中心的な仕組みについて解説されている
+    \begin{alertblock}{感情分析の例}
+        正の重みは「クラス1である根拠」となり、負の重みは「クラス1でない（クラス0である）根拠」となる\\
+        "awesome"（最高）という単語には高い正の重みが、"abysmal"（最悪）という単語には大きな負の重みがつくことが期待される
     \end{alertblock}
 \end{frame}
 
@@ -231,8 +239,15 @@
     \frametitle{4.2: シグモイド関数}
     \begin{alertblock}{加重和$z$の算出}
         テスト事例の判定時には、各特徴量にその重みを掛け合わせ、バイアスを加算した単一の数値$z$を算出する
-        \\数学的には、重みベクトル$w$と特徴ベクトル$x$の内積を用いて、$z = w ・ x + b$と表現される
-        \\この$z$は$-\infty$から$\infty$の範囲の実数値を取るため、そのままでは$0$から$1$の確率として扱えない
+        \begin{equation*}
+            z = (\sum_{i=1}^{n} w_i x_i) + b
+        \end{equation*}
+        また、重みベクトル$w$と特徴ベクトル$x$の内積を用いて、以下のように表現できる
+        \begin{equation*}
+            z = \boldsymbol{w} \cdot \boldsymbol{x} + b 
+        \end{equation*}
+        この$z$が「クラス1にどのくらい属すか」の根拠となる\\
+        ただし、この$z$は$-\infty$から$\infty$の範囲の実数値を取るため、そのままでは$0$から$1$の確率として扱えない
     \end{alertblock}
 \end{frame}
 
@@ -240,11 +255,40 @@
     \frametitle{4.2: シグモイド関数}
 
     \begin{alertblock}{シグモイド関数の役割}
-        $z$を0から1の範囲に変換するために、シグモイド関数（またはロジスティック関数）を使用する
+        $z$を0から1の範囲に変換するために、シグモイド関数（ロジスティック関数）を使用する
+        \begin{equation*}
+            \sigma(z) = \frac{1}{1 + e^{-z}}
+        \end{equation*}
         \\実数値を確率として適切な範囲に変換できるだけでなく、微分可能であるため、学習のプロセスにおいて非常に適している
     \end{alertblock}
     \centering
     \includegraphics[scale=0.7]{./etc/sigmoid.png}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.2: シグモイド関数}
+    \begin{alertblock}{確率の定義}
+        シグモイド関数を適用することで、書くクラスの確率を以下のように定義する
+        \begin{eqnarray*}
+            P(y = 1) &=& \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
+            P(y = 0) &=& 1 - \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
+                     &=& \sigma(-(\boldsymbol{w} \cdot \boldsymbol{x} + b)) \qquad (\because 1 - \sigma(x) = \sigma(-x))
+        \end{eqnarray*}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.2: シグモイド関数}
+    \begin{alertblock}{重要な用語}
+        \begin{itemize}
+            \item ロジット（logit）\\シグモイド関数への入力であるスコア$z$のこと
+            %シグモイド関数の逆関数であるロジット関数（対数オッズ比）に由来している
+            \begin{equation*}
+                logit(p) = z = \sigma^{-1}(p) = \log \frac{p}{1-p}
+            \end{equation*}
+            \item $\hat{y}$：シグモイド関数の出力\\「入力が正のクラスである確率$P(y=1)$」の推定値を指す
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 % Sction 4.3 --------------------------------------------------------------
