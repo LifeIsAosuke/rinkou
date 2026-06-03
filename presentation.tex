@@ -512,19 +512,53 @@
     \frametitle{4.5: 交差エントロピー損失関数}
     \begin{alertblock}{条件付き最大尤度測定と交差エントロピー}
         ロジスティック回帰では、訓練データにおける正解ラベルの対数確率\footnote{確率$p$を対数$log(p)$に変換した値。計算の安定化や情報量の表現を目的に使用される}を最大化するようなパラメータ$(w, b)$を選択する条件付き最大尤度推定という手法を取る
-        \\この手法から導き出される損失関数が、負の対数尤度損失であり、一般に交差エントロピー損失と呼ばれる
     \end{alertblock}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.5: 交差エントロピー損失関数}
-    \begin{alertblock}{数学的定義}
-        1つの事例$x$に対する交差エントロピー損失$L_{CE}$は以下の式で表される
-        \begin{equation}
-            L_{CE}(\hat{y}, y) = -[y \log \hat{y} + (1 - y) \log (1 - \hat{y})]
-        \end{equation}
-        ここに、$\hat{y} = \sigma(w ・ x + b)$を代入すると、パラメータを用いた具体的な計算式になる
-        \\この式は、$y = 1$のときは$-\log\hat{y}$を計算し、$y = 0$のときは$-\log(1 - \hat{y})$を計算することを意味している
+    \begin{alertblock}{条件付き最大尤度測定と交差エントロピー}
+        \begin{itemize}
+            \item ベルヌーイ分布\\クラスが0か1の2値であるため、1つの事例に対する確率$p(y|x)$は以下のように表現できる
+            \begin{equation*}
+                p(y|x) = \hat{y}^y(1-\hat{y})^{1-y}
+                       = 
+                       \left\{
+                            \begin{alignedat}{2}
+                                \hat{y}         \quad &(y = 1)& \\
+                                1-\hat{y}       \quad &(y = 0)&
+                            \end{alignedat}
+                       \right.
+            \end{equation*}
+            \item 対数尤度の最大化\\数学的な扱いを容易にするため、両辺の対数を取る（対数確率を最大化するパラメータは、元の確率も最大化する）
+            \begin{equation*}
+                \log p(y|x) = y \log \hat{y} + (1-y) \log (1-y)
+            \end{equation*}
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.5: 交差エントロピー損失関数}
+    \begin{alertblock}{条件付き最大尤度測定と交差エントロピー}
+        先ほどの、「最大化」の問題を「最小化（損失）」の問題にするため、符号を反転させる。これが交差エントロピー$L_{CE}$である
+        \begin{eqnarray*}
+            L_{CE}(\hat{y}, y) &=& -[y \log \hat{y} + (1 - y) \log (1 - \hat{y})] \\
+                               &=&
+                               \left\{
+                                \begin{alignedat}{2}
+                                    - \log \hat{y}         \quad &(y = 1)& \\
+                                    - \log (1-\hat{y} )      \quad &(y = 0)&
+                                \end{alignedat}
+                              \right. \\
+                               &=&
+                               \left\{
+                                \begin{alignedat}{2}
+                                    - \log \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b)         \quad &(y = 1)& \\
+                                    - \log (1 - \sigma((\boldsymbol{w} \cdot \boldsymbol{x} + b)))     \quad &(y = 0)&
+                                \end{alignedat}
+                              \right.
+        \end{eqnarray*}
     \end{alertblock}
 
 \end{frame}
@@ -536,17 +570,41 @@
             \item 予測が正しい場合\\予測確率が正解（０または１）に近づくほど、損失は０（最小）に近づく
             \item 予測が外れた場合\\予測が正解から遠ざかるほど、損失は無限大に向かって急激に増加する
         \end{itemize}
-        この性質により、正しいクラスの確率を最大化することは、同時に誤ったクラスの確立を最小化することにつながる
+        この性質により、正しいクラスの確率を最大化することは、同時に誤ったクラスの確率を最小化することにつながる
     \end{alertblock}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.5: 交差エントロピー損失関数}
     \begin{alertblock}{具体的な計算例}
-        映画レビューの感情分析を例にとると、以下のようになる
-        正解が「肯定的（$y = 1$）」で、モデルの予測が$0.70$の場合：損失は$0.36$
-        \\もし実際には「否定的（$y = 0$）」だった場合：損失は$1.2$
-        \\このように、モデルが確信を持って間違えるほど、大きなペナルティ（高い損失値）が課される仕組みになっている。
+        \begin{itemize}
+            \item 正解が「肯定的（$y = 1$）」で、モデルの予測が$0.70$の場合\\
+            \begin{eqnarray*}
+                L_{CE}(\hat{y}, y) &=& -[y \log \hat{y} + (1 - y) \log (1 - \hat{y})] \\
+                                   &=& - \log \hat{y} \\
+                                   &=& - \log \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
+                                   &=& -log (.70) \\
+                                   &=& .36
+            \end{eqnarray*}
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.5: 交差エントロピー損失関数}
+    \begin{alertblock}{具体的な計算例}
+        映画レビューの感情分析（スライドP9999）を例にとると、以下のようになる
+        \begin{itemize}
+            \item 実際には「否定的（$y = 0$）」だった場合：\\
+            \begin{eqnarray*}
+                L_{CE}(\hat{y}, y) &=& -[y \log \hat{y} + (1 - y) \log (1 - \hat{y})] \\
+                                   &=& - \log (1-\hat{y}) \\
+                                   &=& - \log (1 - \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b)) \\
+                                   &=& -log (.30) \\
+                                   &=& .12
+            \end{eqnarray*}
+        \end{itemize}
+        このように、モデルが確信を持って間違えるほど、大きなペナルティ（高い損失値）が課される仕組みになっている。
     \end{alertblock}
 \end{frame}
 
