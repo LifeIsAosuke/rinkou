@@ -1,5 +1,7 @@
 % !TEX program = lualatex
 
+% rinkou autho: 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
+
 \documentclass[unicode,11pt]{beamer} % スライド用のレイアウト
 \usepackage{luatexja} % Beamer単体では日本語を出力できないのでこれを使う
 \usepackage{amsmath, amssymb, bm, ascmac, multicol, xcolor}
@@ -159,16 +161,26 @@
 
 \begin{frame}
     \frametitle{4.1: 機械学習と分類}
-    \begin{alertblock}{確立的分類器の４つの構成要素}
+    \begin{alertblock}{教師あり機械学習の枠組み}
+        教師あり学習では、入力とクラスセットに加え、訓練セットと学習アルゴリズムが必要
+        \begin{itemize}
+            \item 訓練セット\\$m$個の入力と教師信号\footnote{訓練データの各事例に付与された「正しいラベル」のこと}のペアで構成される\\training set: $\{(x^{(1)}, y^{(1)}), (x^{(2)}, y^{(2)}), ... , (x^{(m)}, y^{(m)})\}$
+            \item 目的\\新しい道の入力$x$を正しいクラス$y$にマッピングできる分類器を訓練データから学習すること
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.1: 機械学習と分類}
+    \begin{alertblock}{分類器の４つの構成要素}
         % ロジスティック回帰のような確率的分類器は、単にクラスを割り当てるだけでなく、そのクラスに属する「確率」も算出する
         % これらは共通して４つの要素で構成される。
         \begin{itemize}
             \item 特徴量表現 \\ 入力$x$を、特徴量ベクトル$[x_1, x_2, ..., x_n]$に変換する 
-            \item 分類関数 \\ シグモイド関数やソフトマックス関数を用いて、各クラスに属する確率を計算する
-            \item 目的関数 \\ 学習において最小化したいエラー（予測と正解のずれ）を測定する(交差エントロピー関数など)
-            \item 最適化アルゴリズム \\ 目的関数を最小化するようにパラメータを更新する手順(確率的勾配降下法など)
+            \item 分類関数（シグモイド関数やソフトマックス関数） \\ 各クラスに属する確率を計算する
+            \item 目的関数（交差エントロピー関数など）\\ 学習において最小化したいエラー（予測と正解のずれ）を測定する
+            \item 最適化アルゴリズム（確率的勾配降下法など）\\ 目的関数を最小化するようにパラメータを更新する手順
         \end{itemize}
-        
     \end{alertblock}
 \end{frame}
 
@@ -177,8 +189,8 @@
     \begin{alertblock}{機械学習による分類の２つの段階}
         % 機械学習による分類は、大きく分けて２つの段階を経て行われる
         \begin{itemize}
-            \item 学習（training）\\訓練セットと勾配降下法を以ていいて、モデルのパラメータである重み$w$とバイアス$b$を決定する
-            \item テスト（test）\\学習済みのモデルに未知の事例$x$を入力して確率を計算し、最も確率の高いラベルを返す
+            \item 学習（training）\\交差エントロピー損失とSGDを用いて、モデルのパラメータである重み$w$とバイアス$b$を決定する
+            \item テスト（test）\\学習済みのモデルに未知の事例$x$を入力、それぞれのクラスに属する確率$P(y = y_i|x)$を計算し、最も確率の高いクラスのラベル$y=0,1$を返す
         \end{itemize}
     \end{alertblock}
 \end{frame}
