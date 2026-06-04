@@ -88,10 +88,6 @@
             \item LLMにおける次単語予測
         \end{itemize}
     \end{exampleblock}
-\end{frame}
-
-\begin{frame}
-    \frametitle{Chap4: 概要}
     \begin{alertblock}{ロジスティック回帰を学ぶ必要性}
         \begin{itemize}
             \item ニューラルネットワークの基礎理解
@@ -229,10 +225,10 @@
 \begin{frame}
     \frametitle{4.2: シグモイド関数}
     %この章では、２値ロジスティック回帰において、入力を確率に変換する中心的な仕組みについて解説されている
-    \begin{alertblock}{感情分析の例}
+    \begin{exampleblock}{感情分析の例}
         正の重みは「クラス1である根拠」となり、負の重みは「クラス1でない（クラス0である）根拠」となる\\
         "awesome"（最高）という単語には高い正の重みが、"abysmal"（最悪）という単語には大きな負の重みがつくことが期待される
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}
@@ -268,17 +264,13 @@
 \begin{frame}
     \frametitle{4.2: シグモイド関数}
     \begin{alertblock}{確率の定義}
-        シグモイド関数を適用することで、各クラスの確率を以下のように定義する
+        シグモイド関数を適用することで、各クラスの確率を次のように定義
         \begin{eqnarray*}
             P(y = 1) &=& \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
             P(y = 0) &=& 1 - \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
                      &=& \sigma(-(\boldsymbol{w} \cdot \boldsymbol{x} + b)) \qquad (\because 1 - \sigma(x) = \sigma(-x))
         \end{eqnarray*}
     \end{alertblock}
-\end{frame}
-
-\begin{frame}
-    \frametitle{4.2: シグモイド関数}
     \begin{alertblock}{重要な用語}
         \begin{itemize}
             \item ロジット（logit）\\シグモイド関数への入力であるスコア$z$のこと
@@ -331,7 +323,7 @@
 
 \begin{frame}
     \frametitle{4.3: ロジスティック回帰による分類}
-    \begin{alertblock}{感情分析の具体例}
+    \begin{exampleblock}{感情分析の具体例}
         映画のレビューの感情分析を例とすると、計算プロセスは以下のようになる
         \begin{itemize}
             \item 以下の特徴量を抽出し、特徴量ベクトル$\boldsymbol{x}$を作成する
@@ -345,21 +337,19 @@
             \end{itemize}
             \item 重みの適応\\学習済みの重み$w$とバイアス$b$を用いて加重和を計算し、シグモイド関数を通すことで、そのレビューが肯定的である確率（例えば0.70）を算出する
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.3: ロジスティック回帰による分類}
-    \begin{alertblock}{感情分析の具体例}
-        \centering
-        \includegraphics[scale=0.55]{etc/4-3table.png}
-        \includegraphics[scale=0.5]{etc/fig4.2.png}
-    \end{alertblock}
+    \centering
+    \includegraphics[scale=0.55]{etc/4-3table.png}
+    \includegraphics[scale=0.5]{etc/fig4.2.png}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.3: ロジスティック回帰による分類}
-    \begin{alertblock}{感情分析の具体例}
+    \begin{exampleblock}{感情分析の具体例}
         学習済みモデルより、以下のことが判明している
         \begin{itemize}
             \item 特徴量の重み：$[2.5, -5.0, -1.2, 0.5, 2.0, 0.7]$
@@ -376,26 +366,22 @@
                    &=& 1 - \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
                    &=& 0.30
         \end{eqnarray*}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.3: ロジスティック回帰による分類}
     \begin{alertblock}{特徴量の設計}
         \begin{itemize}
-            \item ロジスティック回帰では、入力のあらゆる性質を特徴量として利用できる
+            \item ロジスティック回帰は入力のあらゆる性質を特徴量として利用可能
             \item 例： 「ピリオドの曖昧性解消」\\ピリオドが文末 （EOS）か単語の一部（略語など）かを判定
         \end{itemize}
     \end{alertblock}
-\end{frame}
-
-\begin{frame}
-    \frametitle{4.3: ロジスティック回帰による分類}
     \begin{alertblock}{特徴量の設計とスケーリング}
         \begin{itemize}
             \item 単語の属性\\現在の単語が小文字であれば、その後のピリオドは文末である可能性が高く、正の重みを与える
             \item 辞書情報\\その単語が略語辞書（"Prof."など）に含まれていれば、負の重みが与えられる
-            \item 特徴量の相互作用\\複数の条件を組み合わせた複雑な特徴量。例えば、「現在の単語が"St."であり、かつ前の単語が固有名詞（大文字）である」場合、それは文末ではなく、「通り名（Street）」の略称である可能性が高い
+            \item 特徴量の相互作用\\複数の条件を組み合わせた複雑な特徴量。「現在の単語が"St."であり、かつ前の単語が固有名詞である」場合、それは文末ではなく「通り名（Street）」の略称である可能性が高い
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -506,10 +492,6 @@
         分類器の出力である$\hat{y}$（入力$x$がクラス1である確率の推定値）と、実際の正解ラベル$y$（0または1）がどれだけ離れているかを測定する必要がある
         \\この距離を測る指標を損失関数（loss function）または費用関数（cost function）と呼ぶ
     \end{alertblock}
-\end{frame}
-
-\begin{frame}
-    \frametitle{4.5: 交差エントロピー損失関数}
     \begin{alertblock}{条件付き最大尤度測定と交差エントロピー}
         ロジスティック回帰では、訓練データにおける正解ラベルの対数確率\footnote{確率$p$を対数$log(p)$に変換した値。計算の安定化や情報量の表現を目的に使用される}を最大化するようなパラメータ$(w, b)$を選択する条件付き最大尤度推定という手法を取る
     \end{alertblock}
@@ -576,17 +558,17 @@
 
 \begin{frame}
     \frametitle{4.5: 交差エントロピー損失関数}
-    \begin{alertblock}{具体的な計算例}
-        映画レビューの感情分析（スライドP9999）を例にとると、以下のようになる
-        \centering
-        \includegraphics[scale=0.55]{etc/4-3table.png}
-        \includegraphics[scale=0.5]{etc/fig4.2.png}
-    \end{alertblock}
+    \begin{exampleblock}{具体的な計算例}
+        映画レビューの感情分析を例にとると、以下のようになる
+    \end{exampleblock}
+    \centering
+    \includegraphics[scale=0.4]{etc/4-3table.png}
+    \includegraphics[scale=0.5]{etc/fig4.2.png}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.5: 交差エントロピー損失関数}
-    \begin{alertblock}{具体的な計算例}
+    \begin{exampleblock}{具体的な計算例}
         \begin{itemize}
             \item 正解が「肯定的（$y = 1$）」で、モデルの予測が$0.70$の場合\\
             \begin{eqnarray*}
@@ -597,12 +579,12 @@
                                    &=& .36
             \end{eqnarray*}
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.5: 交差エントロピー損失関数}
-    \begin{alertblock}{具体的な計算例}
+    \begin{exampleblock}{具体的な計算例}
         \begin{itemize}
             \item 実際には「否定的（$y = 0$）」だった場合：\\
             \begin{eqnarray*}
@@ -614,7 +596,7 @@
             \end{eqnarray*}
         \end{itemize}
         このように、モデルが確信を持って間違えるほど、大きなペナルティ（高い損失値）が課される仕組みになっている。
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 % Sction 4.6 --------------------------------------------------------------
@@ -736,7 +718,7 @@
 
 \begin{frame}
     \frametitle{4.6: 勾配降下法}
-    \begin{alertblock}{SGDの具体的な計算例}
+    \begin{exampleblock}{SGDの具体的な計算例}
         映画のレビューの感情分析（positive or negative）において、以下のようなケースを想定し、SGDの第一ステップを示す
         \begin{itemize}
             \item 特徴量ベクトル$\boldsymbol{x}$
@@ -756,12 +738,12 @@
         \begin{equation*}
             \theta^{t+1} = \theta^t - \eta \boldsymbol{\nabla_{\theta} L}(f(x^{(i)};\boldsymbol{\theta}, y^{(i)}))
         \end{equation*}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.6: 勾配降下法}
-    \begin{alertblock}{SGDの具体的な計算例}
+    \begin{exampleblock}{SGDの具体的な計算例}
         \begin{eqnarray*}
             \boldsymbol{\nabla_{w, b} L} &=& 
             \begin{bmatrix}
@@ -816,7 +798,7 @@
             \end{bmatrix}
         \end{equation*}
         これより、それぞれの変数は$w_1 = .15, w_2 = .1, b = .05$に更新された
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 % Sction 4.7 --------------------------------------------------------------
