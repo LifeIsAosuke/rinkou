@@ -215,18 +215,13 @@
     %この章では、２値ロジスティック回帰において、入力を確率に変換する中心的な仕組みについて解説されている
     \begin{alertblock}{2値分類の目標と数値化}
         \begin{itemize}
-            \item 目標\\新しい入力観測値$x$に対して、特定のクラスに属するかどうか（0か1か）を判定すること
+            \item 目標\\新しい入力観測値$x$に対して、特定のクラスに属するかどうかを判定すること
             \item 確率の計算\\クラスを割り当てるだけでなく、観測値がクラス１に属する確率$P(y = 1|x)$を求める
             \item 重みづけとバイアス\\学習を通じて、各特徴量$x_i$の重要度を表す重み$w_i$とバイアス項$b$を決定する
         \end{itemize}
     \end{alertblock}
-\end{frame}
-
-\begin{frame}
-    \frametitle{4.2: シグモイド関数}
-    %この章では、２値ロジスティック回帰において、入力を確率に変換する中心的な仕組みについて解説されている
     \begin{exampleblock}{感情分析の例}
-        正の重みは「クラス1である根拠」となり、負の重みは「クラス1でない（クラス0である）根拠」となる\\
+        正の重みは「クラス1である根拠」となり、負の重みは「クラス1でない根拠」となる。
         "awesome"（最高）という単語には高い正の重みが、"abysmal"（最悪）という単語には大きな負の重みがつくことが期待される
     \end{exampleblock}
 \end{frame}
@@ -628,7 +623,7 @@
         \begin{itemize}
             \item 目標\\全ての事例にわたる平均的な損失関数$L$を最小化するパラメータ$\theta = \{ \boldsymbol{w}, b\}$を見つけること
             \begin{equation*}
-                \hat{\theta} = \underset{\theta}{\operatorname{argmin}} \frac{1}{m} \sum_{i=1}^m L_{CE} (f((x^{(i)};\hat{\hat{\theta}}), y^{(i)}))
+                \hat{\theta} = \underset{\theta}{\operatorname{argmin}} \frac{1}{m} \sum_{i=1}^m L_{CE} (f((x^{(i)};\hat{\theta}), y^{(i)}))
             \end{equation*}
             \item 直感的なイメージ\\深い谷底へ最も早く降りようとしているハイカー。ハイカーは周囲を見渡し、最も急な斜面を探して、その反対横行へと一歩進む。これを繰り返すことで最小値（谷底）を目指す
         \end{itemize}
@@ -940,9 +935,9 @@
     \begin{alertblock}{勾配の計算}
         勾配降下法を用いて重みを更新するために、損失関数の勾配（微分）を計算する
         \\特定のクラス$k$の$i$番目の重み$w_{k,i}$に関する偏微分は、以下のような直感的な式で表される
-        \begin{equation}
+        \begin{equation*}
             \frac{\partial L_{CE}}{\partial w_{k, i}} = -(y_k - \hat{y}_k) x_i
-        \end{equation}
+        \end{equation*}
 
         これは、クラス$k$の正解（0または1）と予測確率の差に入力値$x_i$をかけたものであり、２値ロジスティック回帰の勾配と本質的に同じ形式である
     \end{alertblock}
@@ -974,7 +969,7 @@
     \begin{alertblock}{混同行列}
         分類システムの性能を可視化するために、人間の手による正解ラベル（gold label）とシステムの出力を評価する混同行列という表を作成する
         \begin{itemize}
-            \item 真陽性（True Positive / TP
+            \item 真陽性（True Positive / TP)
             \item 偽陽性（False Positive / FP）
             \item 偽陰性（False Negative / FN）
             \item 真陰性（True Negative / TN）
@@ -983,7 +978,7 @@
     \centering
     \includegraphics[scale=0.4]{etc/評価指標.png}
 \end{frame}
-
+ 
 \begin{frame}
     \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
     \begin{alertblock}{正解率（Accuracy）とその限界}
@@ -1134,23 +1129,6 @@
     \begin{block}{}
         \begin{enumerate}
             \item 語彙意味論
-            \item ベクトル意味論とその直感
-            \item 単純なカウントベースの埋め込み
-            \item コサイン類似度
-            \item Word2vec
-            \item 埋め込みの可視化
-            \item 埋め込みの意味的特性
-            \item バイアスと埋め込み
-            \item ベクトルモデルの評価
-        \end{enumerate}
-    \end{block}
-\end{frame}
-
-\begin{frame}
-    \frametitle{Chap5: 埋め込み}
-    \begin{block}{}
-        \begin{enumerate}
-            \item {\color{red}\textbf{語彙意味論}}
             \item ベクトル意味論とその直感
             \item 単純なカウントベースの埋め込み
             \item コサイン類似度
@@ -1626,8 +1604,8 @@
         これまでのカウントベースのベクトル（疎ベクトル）は語彙数$|V|$と同じ非常に長い次元を持ち、そのほとんどが0だった。これに対し、埋め込みは以下の特徴を持つ
         \begin{itemize}
             \item 次元の短縮\\通常50から1000次元程度と非常にコンパクト
-            \item 学習の効率化\\パラメータ数が少ないため、分類器が学習しやすく、繁華性のが高まり過学習を防ぐことができる
-            \item 同義性の補足\\疎ベクトルではcarとautomobileは全く別次元として扱われるが、密ベクトルはこれらの類似性をうまく捉えることができる
+            \item 学習の効率化\\パラメータ数が少ないため、分類器が学習しやすく、汎化性能が高まり過学習を防ぐことができる
+            \item 同義性の補足\\疎ベクトルでは"car"と"automobile"は全く別次元として扱われるが、密ベクトルはこれらの類似性をうまく捉えることができる
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -1646,11 +1624,55 @@
 
 \begin{frame}
     \frametitle{5.5: Word2vec}
+    \begin{alertblock}{数学的モデル}
+        ターゲット単語$\boldsymbol{w}$と候補となる文脈語$\boldsymbol{c}$が与えられた時、それが実際の文脈語である確率$P(+|w, c)$を、内積とシグモイド関数を用いて計算する
+        \begin{itemize}
+            \item 内積による類似度
+            \begin{equation*}
+                Similarity(w, c) \approx \boldsymbol{w} \cdot \boldsymbol{c}
+            \end{equation*}
+            \item シグモイド関数
+            \begin{equation*}
+                \sigma(x) = \frac{1}{1 + \exp(-x)}
+            \end{equation*}
+            \item 確率の定義
+            \begin{eqnarray*} 
+                P(+|w, c) &=& \sigma(\boldsymbol{w}, \boldsymbol{c}) = \frac{1}{1 + \exp(-\boldsymbol{c} \cdot \boldsymbol{w})} \\
+                P(-|w, c) &=& 1 - P(+|\boldsymbol{w}, \boldsymbol{c}) = \sigma(-\boldsymbol{c} \cdot \boldsymbol{w})
+            \end{eqnarray*}
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{alertblock}{数学的モデル}
+        文脈窓$L$内の全ての単語が独立であると仮定し、それらの確立を掛け合わせる
+        \begin{eqnarray*}
+            P(+|w, c) &=& \prod_{i=1}^L \sigma(\boldsymbol{c_i}, \boldsymbol{w}) \\
+            \log P(+|w, c) &=& \sum_{i=1}^L \log \sigma(\boldsymbol{c_i}, \boldsymbol{w})
+        \end{eqnarray*}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
     \begin{alertblock}{Skip-gramとネガティブサンプリング（SGNS）}
         Word2vecの中でも特に広く使われるSkip-gram with negative sampling(SGNS)アルゴリズムの詳細を以下に記す
         \begin{itemize}
             \item 正の事例\\ターゲット単語（例：apricot）と、その前後数単語のウィンドウ内にある実際の文脈語（例：jam）のペア
             \item 負の事例（ネガティブサンプリング）\\ターゲット単語と、語彙からランダムに選ばれたノイズ語（例：aardvark）のペアをk個作成する
+            \item 学習の目的\\テキストを繰り返し読み込みながら、実際に近くに現れる単語$w$の埋め込みを互いに近づけ、近くに現れない単語の埋め込みを遠ざけるようにベクトルを更新する
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{alertblock}{Skip-gram埋め込みの学習}
+        Word2vecの一手法である、SGNSがどのようにテキストから単語ベクトルを学習するのか、詳しく見てみる
+        \begin{itemize}
+            \item 初期化\\まず、語彙内の$N$個の単語全てに、ランダムな埋め込みベクトルを割り当てる
             \item 分類の仕組み\\2つのベクトルの内積をシグモイド関数に通して確率を算出する。ターゲットと文脈語の内積は大きく、ノイズ語との内積は小さくなるように学習する
         \end{itemize}
     \end{alertblock}
@@ -1658,13 +1680,78 @@
 
 \begin{frame}
     \frametitle{5.5: Word2vec}
-    \begin{alertblock}{学習プロセス}
+    \begin{exampleblock}{学習の例}
+        1つのターゲット単語に対して、2種類の訓練インスタンスを作成する
+        \\... lemon, a [tablespoon of \textbf{apricot} jam, a] pinch ...という文で、ターゲットが"apricot"、ウィンドウ$L= \pm 2$の場合
+    \end{exampleblock}
+    \begin{multicols}{2}
+        \centering
+        \begin{table}
+            \centering
+            \caption{positive examples +}
+            \begin{tabular}{ll}
+                w&$c_{pos}$\\
+                \hline
+                apricot&tablespoon\\
+                apricot&of\\
+                apricot&jam\\
+                apricot&a\\
+            \end{tabular}
+        \end{table}
+        \begin{table}
+            \centering
+            \caption{negative examples -}
+            \begin{tabular}{llll}
+                w&$c_{neg}$&w&$c_{neg}$\\
+                \hline
+                apricot&aardvark&apricot&seven\\
+                apricot&my&apricot&forever\\
+                apricot&where&apricot&dear\\
+                apricot&coaxial&apricot&if\\
+            \end{tabular}
+        \end{table}
+    \end{multicols}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{exampleblock}{学習の例}
         \begin{itemize}
-            \item 損失関数\\正解のペアの確立を最大化し、ノイズのペアの確立を最小化するように設計された損失関数を最小化する
-            \item 最適化\\確率的勾配降下法（SGD）を用いて、各ステップで少しずつベクトル（重み）を更新していく
-            \item 2つの行列\\システムは各単語について「ターゲットとしてのベクトル」と「文脈としてのベクトル」の2つの行列（WとC）を保持する
+            \item ネガティブサンプリング\\1つのポジティブ例に対して、k個のネガティブ例を作成する（通常$k > 1$）
+            \item ノイズ語の選択\\語彙全体からランダムに選ばれるが、出現頻度に基づいた重み付きユニグラム確率$P_{\alpha}(w)$が用いられる
+            \begin{equation*}
+                P_{\alpha}(w) = \frac{count(w)^{\alpha}}{\sum_{w'} count(w')^{\alpha}}
+            \end{equation*}
+            \item $\alpha$の値について\\$\alpha = 0.75$に設定することで、稀な単語がノイズ語として選ばれる確立を少し高め、学習効率を向上させる
         \end{itemize}
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{alertblock}{損失関数}
+        損失関数\\正解のペアの確率を最大化し、ノイズのペアの確率を最小化するように設計された損失関数を最小化する
+        \\第1項は本物の文脈語である確率を高くし、第2項はk個のノイズ語が文脈語でない確率を高くすることを意味している
+        \small
+        \begin{eqnarray*}
+            L &=& -\log[P(+|w, c_{pos})\prod_{i=1}^k P(-|w, c_{neg_i})] \\
+              &=& -[\log P(+|w, c_{pos}) + \sum_{i=1}^k \log P(-|w, c_{neg_i})] \\
+              &=&-[\log P(+|w, c_{pos}) + \sum_{i=1}^k \log (1 - P(+|w, c_{neg_i}))] \\
+              &=&-[\log \sigma(c_{pos} \cdot w) + \sum_{i=1}^k \log \sigma(-c_{neg_i} \cdot w)]
+        \end{eqnarray*}
     \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.5: Word2vec}
+    \begin{alertblock}{勾配降下法による更新}
+        SGDを用いて、ステップ$t$から$t+1$に向けてパラメータを更新する
+        \\例：ターゲット語"apricot"と実文脈語"jam"を近づけ、ノイズ語"Tolstoy"を遠ざける
+    \end{alertblock}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.6]{etc/fig5.7.png}
+    \end{figure}
 \end{frame}
 
 \begin{frame}
@@ -1786,6 +1873,18 @@
         \begin{itemize}
             \item 平行四辺形モデル\\ベクトルの加減算によって類推問題を解く手法
             \item 有名な例\\「king - man + woman」を計算すると、「queen」に近いベクトルが得られる
+        \end{itemize}
+    \end{alertblock}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.6]{etc/fig5.8.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.7: 埋め込みの意味的特性}
+    \begin{alertblock}{類推（アナロジー）と関係の類似性}
+        \begin{itemize}
             \item この性質により、男女の関係だけでなく、国と主との関係（パリ：フランス = ローマ：イタリア）や、比較級・最上級といった形態論的な関係も捉えることができる
             \item ただし、このモデルは単純すぎて人間の認知プロセスを完全には模倣できていないと言う指摘や、頻出語以外では精度が落ちると言う注意点もある
         \end{itemize}
@@ -1797,11 +1896,15 @@
     \begin{alertblock}{歴史的意味論}
         埋め込みは、時代ごとのテキストから別々のベクトル空間を作成することで、単語の意味が時間の経過とともにどう変化したかを分析するツールとしても使われる
         \begin{itemize}
-            \item gay: かつての「快活な（cheerful）」と言う意味から、現代の同性愛を指す意味へ
-            \item broadcast: 元々の「種をまく」と言う意味から、ラジオやテレビの「放送」へ
-            \item awful: 「畏怖に満ちた（full of awe）」と言うポジティブなニュアンスから、現代の「ひどい（terrible）」と言うネガティブな意味への悪化（pejoration）
+            \item gay: 快活な（cheerful）→現代の同性愛を指す意味へ
+            \item broadcast: 種をまく→ラジオやテレビの「放送」へ
+            \item awful:畏怖に満ちた（full of awe）と言うポジティブなニュアンス→現代の「ひどい（terrible）」と言うネガティブな意味への悪化
         \end{itemize}
     \end{alertblock}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.5]{etc/fig5.10.png}
+    \end{figure}
 \end{frame}
 
 % Sction 5.8 --------------------------------------------------------------
