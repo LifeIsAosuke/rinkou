@@ -1099,7 +1099,7 @@
     \begin{alertblock}{単語の意味表現の課題}
         \begin{itemize}
             \item 従来のNLP（n-gramモデルなど）では、単語は単なる文字の羅列や語彙リストのインデックスとして扱われてきた
-            \item しかし、単に単語を大文字にするような表現は、意味モデルとしては不十分
+            \item しかし、単に単語を大文字にするような表現（dogとDOG）は、意味モデルとしては不十分
             \item 優れた意味モデルには、単語間の類似性（catとdogは似ている）、対義性（coldとhotは反対）、共起性（happyは肯定的、sadは否定的）、および同一事象に対する異なる視点（buyとsell）などを捉える能力が求められる
         \end{itemize}
     \end{alertblock}
@@ -1109,11 +1109,13 @@
     \frametitle{5.1: ベクトル意味論とその直感}
     \begin{alertblock}{見出し語と語義}
         \begin{itemize}
-            \item 見出し語：辞書に掲載される基本の形\\miceの見出し語はmouse、sangやsungの見出し語はsing。これに対し、実際に使われるsungやcarpetsなどの携帯は語形と呼ばれる
-            \item 語義：一つの見出し語が持つ複数の意味の側面を指す\\mouseにはネズミ（齧歯類）とマウス（入力機器）ということなる語義がある
-            \item 多義性：一つの見出し語が複数の語義を持つ性質のこと\\文脈からどの語義が使われているか判断する「語義曖昧性解消」というタスクが必要になる
+            \item 見出し語：辞書に掲載される基本の形
+            \item 語義：一つの見出し語が持つ複数の意味の側面を指す
+            \item 多義性：一つの見出し語が複数の語義を持つ性質のこと
         \end{itemize}
     \end{alertblock}
+    \centering
+    \includegraphics[scale=0.2]{etc/mouse.png}
 \end{frame}
 
 \begin{frame}
@@ -1121,7 +1123,7 @@
     \begin{alertblock}{同義性}
         \begin{itemize}
             \item 2つの語義が同一、またはほど同一の意味を持つ場合、それらは同義語と呼ばれる（couchとsofa）
-            \item 厳密な定義では、文中で入れ替えても文の審議条件が変わらないものを指す。実際には、「対比の原則」により、形式が異なれば意味もわずかに異なる（科学的な$H_2O$と日常的なwater）ため、実用的には「大まかな同義性」として扱われる
+            \item 厳密な定義では、文中で入れ替えても文の真偽条件が変わらないものを指す。実際には、「対比の原則」により、形式が異なれば意味もわずかに異なる（科学的な$H_2O$と日常的なwater）ため、実用的には「大まかな同義性」として扱われる
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -1131,6 +1133,29 @@
     \begin{alertblock}{単語の類似性と関連性}
         \begin{itemize}
             \item 類似性\\同義語ではないが、catとdogのように概念が似ている関係を指す
+            % 質疑応答、言い換え、要約といったタスクにおいて、フレーズや文の意味の類似度を計算するのに役立つ
+            \item 測定方法\\人間に単語のペアの類似度を判定してもらう
+        \end{itemize}
+    \end{alertblock}
+    \begin{table}
+        \centering
+        \caption{SimLex-999: 0から10のスケールで類似度を評価}
+        \begin{tabular}{lll}
+            \hline
+            vanish & disappear & 9.8\\
+            belief & impression & 5.95\\
+            muscle & bone & 3.65 \\
+            modest & flexible & 0.98 \\
+            hole & agreement & 0.3 \\
+            \hline
+        \end{tabular}
+    \end{table}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.1: ベクトル意味論とその直感}
+    \begin{alertblock}{単語の類似性と関連性}
+        \begin{itemize}
             \item 関連性\\特徴は似てないが、日常的な事象で共起する関係を指す（coffeeとcap、外科医とメス）
             \item 意味領域\\病院（外科医、メス、看護師）やレストラン（ウェイター、メニュー、シェフ）のように、特定のドメインをカバーし、互いに関連し合う単語の集合
         \end{itemize}
@@ -1146,6 +1171,19 @@
             \item これら3つの数値をベクトル（空間上の点）として扱う考え方が、現代のベクトル意味論の先駆けとなった
         \end{itemize}
     \end{alertblock}
+    \begin{table}
+        \centering
+        \begin{tabular}{llll}
+            \hline
+                & Valence & Arousal & Dominance \\
+            \hline
+            courageous & 8.0 & 5.5 & 7.4 \\
+            music & 7.7 & 5.6 & 6.5 \\
+            heartbreak & 2.5 & 5.7 & 3.6 \\
+            cub & 6.7 & 4.0 & 4.2 \\
+            \hline 
+        \end{tabular}
+    \end{table}
 \end{frame}
 
 % Sction 5.2 --------------------------------------------------------------
@@ -1184,11 +1222,20 @@
     \begin{alertblock}{未知の単語を理解する直感}
         広東語からの借用語「ongchoi（空芯菜）」を例に、その意味を推測するプロセスを以下に示す
         \begin{itemize}
-            \item 「ongchoiは炒めると美味しい」「ご飯の上に乗せると最高だ」「塩気のあるソースとongchoiの葉」といった文脈を目にする
-            \item 同時に、「ほうれん草」や「フダンソウ」も「ニンニクと炒める」「ご飯の上」といった度応用の文脈で使われることを知っていれば、ongchoiもそれらと同様の「葉物野菜」であると推測できる
-            \item コンピュータ上では、ongchoiの文脈に出現する単語をカウントすることで、この直感を実装する
+            \item「ongchoiは炒めると美味しい」\\「ご飯の上に乗せると最高だ」\\「塩気のあるソースとongchoiの葉」
+            \item 同時に、「ほうれん草」や「フダンソウ」も「ニンニクと炒める」「ご飯の上」といった文脈で使われることを知っていれば、ongchoiもそれらと同様の「葉物野菜」であると推測できる
         \end{itemize}
     \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.2: ベクトル意味論とその直感}
+    コンピュータ上では、ongchoiの文脈に出現する単語をカウントすることで、この直感を実装する
+    \begin{figure}  
+        \centering
+        \includegraphics[scale=0.6]{etc/fig5.1.png}
+        \caption{"sweetという単語に近いものについて、"200次元のword2vec埋め込みを2次元（t-SNE）で可視化したもの}
+    \end{figure}
 \end{frame}
 
 \begin{frame}
