@@ -1323,6 +1323,30 @@
 
 \begin{frame}
     \frametitle{5.3: 単純なカウントベースの埋め込み}
+    \begin{alertblock}{例（前後４単語ずつ）}
+        is traditionally followed by \textbf{cherry} pie, a traditional dessert\\
+        often mixed, such as \textbf{strawberry} rhubarb pie. Apple pie\\
+        computer peripherals and personal \textbf{digital} assistants. These devices usually\\
+        computer. This includes \textbf{information} available on the internet
+    \end{alertblock}
+    \begin{table}
+        \centering
+        \caption{ターゲット単語を"a", "computer", "pie"に絞ったミニコーパス。実際のベクトルははるかに多くの次元をもち、さらに疎な構造になる}
+        \begin{tabular}{llll}
+            \hline
+            &a&computer&pie\\
+            \hline
+            cherry&1&0&1\\
+            strawberry&0&0&2\\
+            digital&0&1&0\\
+            information&1&1&0\\
+            \hline
+        \end{tabular}
+    \end{table}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.3: 単純なカウントベースの埋め込み}
     \begin{alertblock}{類似性の直感}
         似た意味を持つ単語は、似たような文脈で現れるため、そのベクトルも似たものになる
         \begin{itemize}
@@ -1334,8 +1358,33 @@
 
 \begin{frame}
     \frametitle{5.3: 単純なカウントベースの埋め込み}
+    \begin{figure}
+        \centering
+        \tiny
+        \caption{ウィキペディアコーパスにおける4つの単語の共起ベクトル}
+        \begin{tabular}{lllllllll}
+            \hline
+            &aardvark&...&computer&data&result&pie&suger&...\\
+            \hline
+            cherry&0&...&2&8&9&442&25&...\\
+            strawberry&0&...&0&0&1&60&19&...\\
+            digital&0&...&1670&1683&85&5&4&...\\
+            information&0&...&3325&3982&378&5&13&...\\
+            \hline
+        \end{tabular}
+    \end{figure}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.8]{etc/fig5.4.png}
+        \caption{"デジタル"と"情報"の単語ベクトルの可視化}
+    \end{figure}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.3: 単純なカウントベースの埋め込み}
     \begin{alertblock}{重み付け}
         単なる出現回数（生カウント）をそのまま使うだけでなく、tf-idfなどの重み付関数を適応して、特定の文脈単語の重要性を調整することも一般的である
+        \\生のカウント数では、"the"や"of"といった高頻度語の影響を強く受けてしまうため
     \end{alertblock}
 \end{frame}
 
@@ -1363,7 +1412,7 @@
     % この章では、2つの単語（ベクトル）がどの程度似ているかを数値化する標準的な指標について解説されている
     \begin{alertblock}{類似度測定の必要性}
         2つのターゲット単語（ベクトル$v$と$w$）の類似度を図るには、それらのベクトルを受け取って類似度の度合いを返す指標が必要
-        \\NLPっで最も一般的に使われる指標は、2つのベクトルがなす角のコサインである
+        \\NLPで最も一般的に使われる指標は、2つのベクトルがなす角のコサインである
     \end{alertblock}
 \end{frame}
 
@@ -1382,24 +1431,44 @@
     \frametitle{5.4: コサイン類似度}
     \begin{alertblock}{コサイン類似度の定義}
         頻度の影響を排除し、純粋に「向き（意味）」の似ている度合いを測るために、内積をそれぞれのベクトルの長さで割って正規化する。これがコサイン類似度である
-        \begin{itemize}
-            \item 数式
-            \begin{equation*}
-                cos(v, w) = \frac{v \cdot w}{|v| |w|}
-            \end{equation*}
-            \item 値の範囲\\同じ方向を向いていれば１（最大）、直交していれば０、逆方向なら-1となる。NLPで扱う頻度ベースのベクトルの場合、要素が0から1の範囲に収まる
-        \end{itemize}
+        \begin{equation*}
+            cosine(\boldsymbol{v}, \boldsymbol{w}) = \frac{\boldsymbol{v} \cdot \boldsymbol{w}}{|\boldsymbol{v}| |\boldsymbol{w}|}= \frac{\sum_{i=1}^{N} v_i w_i}{\sqrt{\sum_{i=1}^{N} v_i^2} \sqrt{\sum_{i=1}^{N} w_i^2}}
+        \end{equation*}
+        同じ方向を向いていれば１（最大）、直交していれば０、逆方向なら-1となる。NLPで扱う頻度ベースのベクトルの場合、要素が0から1の範囲に収まる
     \end{alertblock}
 \end{frame}
 
 \begin{frame}
     \frametitle{5.4: コサイン類似度}
-    \begin{alertblock}{具体的な計算例}
-        informationがcherryとdigitalのどちらに近いかを、Wikipediaコーパスの統計値を用いて計算する
-        \\$cos(cherry, information) = 0.018$
-        \\$cos(digital, information) = 0.996$
-        \\この結果から、モデルはinformationがcherryよりもdigitalに圧倒的に近いと正しく判断できる
-    \end{alertblock}
+    \begin{table}
+        \centering
+        \begin{tabular}{llll}
+            \hline
+            &pie&data&computer\\
+            \hline
+            cherry&442&8&2\\
+            digital&5&1683&1670\\
+            information&5&3982&3325\\
+            \hline
+        \end{tabular}
+    \end{table}
+    \small
+    \begin{eqnarray*}
+        cos(cherry, information) &=& \frac{442*5+8*1683+2*1670}{\sqrt{1442^2 + 8^2 + 2^2} \sqrt{5^2 + 3982^2 + 3325^2}} \\
+                                 &=& .018\\
+        cos(digital, information) &=& \frac{5*5+1683*3982+1670*3325}{\sqrt{5^2+1683^2+1670^2} \sqrt{5^2+3982^2+3325^2}} \\
+                                  &=& .996
+    \end{eqnarray*}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.4: コサイン類似度}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.8]{etc/fig5.5.png}
+        \caption{"compueter"と"pie"によって定義された2次元空間における、3つの単語（"cherry", "digital", "infotmation"）のベクトルを図示したもの}
+    \end{figure}
+    これより、"digital"は"cherry"よりも"information"に類似する単語であることがわかる
 \end{frame}
 
 \begin{frame}
@@ -1519,7 +1588,7 @@
 \begin{frame}
     \frametitle{5.6: 埋め込みの可視化}
     \begin{alertblock}{最も単純な方法：類似単語のリストアップ}
-        ある単語wの意味を視覚化する最も簡単な方法は、語彙ないの全ての単語をwとのコサイン類似度でソートし、上位の単語を並べることである
+        ある単語wの意味を視覚化する最も簡単な方法は、語彙内の全ての単語をwとのコサイン類似度でソートし、上位の単語を並べることである
         \\例えば、GloVeアルゴリズムを用いた場合、frogに近い単語として、frogs, toad（ヒキガエル）, litoria（アマガエル族）などがリストアップされる
     \end{alertblock}
 \end{frame}
@@ -1529,6 +1598,10 @@
     \begin{alertblock}{階層的クラスタリング}
         埋め込み空間において、どの単語が互いに似ているかを階層的なツリー構造で示す手法。これにより、単語感の意味的なグループ分けを視覚的に把握できる
     \end{alertblock}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.6]{etc/fig_tree.png}
+    \end{figure}
 \end{frame}
 
 \begin{frame}
@@ -1674,20 +1747,20 @@
 
 \begin{frame}
     \frametitle{5.8: バイアスと埋め込み}
-    \begin{alertblock}{バイアスの除去とその限界}
-        研究者たちは、性別の定義的な意味は維持しつつステレオタイプを除去するための空間変換手法などを開発している
-        \\しかし、これらの手法でバイアスを軽減することはできても、完全に排除することはでいないことが明らかとなっており、現在も未解決の課題（オープン・プロブレム）として残っている
-    \end{alertblock}
-\end{frame}
-
-\begin{frame}
-    \frametitle{5.8: バイアスと埋め込み}
     \begin{alertblock}{歴史的分析の応用}
         逆にこのバイアスを利用して歴史的なステレオタイプの変化を測定する研究も行われている
         \begin{itemize}
             \item 20世紀全体の歴史的テキストから作成した埋め込みを分析することで、職業（司書や大工など）と性別・民族名の結びつきが当時の実際の雇用統計と相関していることが確認された
             \item また、「賢い」「思慮深い」といったの王力に関する形容詞が、かつては女性よりも男性と強く結びついていたこと、そしてそのバイアスが1960年以降徐々に減少していることなどが数値化されている
         \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{5.8: バイアスと埋め込み}
+    \begin{alertblock}{バイアスの除去とその限界}
+        研究者たちは、性別の定義的な意味は維持しつつステレオタイプを除去するための空間変換手法などを開発している
+        \\しかし、これらの手法でバイアスを軽減することはできても、完全に排除することはでいないことが明らかとなっており、現在も未解決の課題（オープン・プロブレム）として残っている
     \end{alertblock}
 \end{frame}
 
