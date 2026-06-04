@@ -850,6 +850,12 @@
             \item 大規模言語モデル（LLM）\\数万語規模の語彙の候補から次の単語の予測をする「$|V|$クラス分類」
         \end{itemize}
     \end{alertblock}
+    \begin{alertblock}{多クラス分類の表現}
+        \begin{itemize}
+            \item 正解ラベル$y$：長さ$K$のone-hotベクトルとして表現される
+            \item 予測ベクトル$\hat{y}$：各要素$\hat{y}_k$は、入力$x$がクラス$k$である確率$P(y_k = 1|x)$の推定値を表す
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}
@@ -857,29 +863,31 @@
     \begin{alertblock}{ソフトマックス関数}
         多項ロジスティック回帰では、シグモイド関数を一般化したソフトマックス関数を使用し、
         各クラス$k$に属する確率$P(y_k = 1 | x)$を計算する
-        \\任意のスコアのベクトル$z$を受け取り、各要素が0から1の範囲にあり、かつ合お系が1になる確率分布に変換する
-        \\シグモイドと同様に、大きな値を持つ入力の確率を一に近づけ、他の小さな値の確率を抑制する性質がある。
-        シグモイドへの入力と同様、ソフトマックスへの入力ベクトルもロジット（logits）と呼ばれる
+        \begin{equation*}
+            softmax(z_i) = \frac{\exp (z_i)}{\sum_{j=1}^K \exp (z_j)} \quad (1 \le i \le K)
+        \end{equation*}
+        シグモイドと同様に、大きな値を持つ入力の確率を1に近づけ、他の小さな値の確率を抑制する性質がある
+    \end{alertblock}
+    \begin{alertblock}{ロジスティック回帰への適用}
+        各クラス$k$に対して、個別の重みベクトル$w_k$とバイアス$b_k$が必要となる
+        \begin{equation*}
+            P(y_k = 1|x) = \frac{\exp (\boldsymbol{w_k} \cdot \boldsymbol{x} + b_k)}{\sum_{j=1}^K \exp (\boldsymbol{w_j} \cdot \boldsymbol{x} + b_j)}
+        \end{equation*}
     \end{alertblock}
 \end{frame}
 
 \begin{frame}
     \frametitle{4.7: 多項ロジスティック回帰}
-    \begin{alertblock}{重み行列$W$とバイアスベクトル$b$}
-        2値分類では1つの重みベクトルを使用したが、多クラス分類ではクラスごとに個別の重みベクトル$w_k$とバイアス$b_k$をもつ
-        \begin{itemize}
-            \item 重み行列\\これらをまとめたものを重み行列$W$（形状は[クラス数K × 特徴量数]）として扱う
-            \item 計算式\\$\hat{y} = softmax(W x + b)$
-        \end{itemize}
+    \begin{alertblock}{行列による効率的な計算}
+        すべての重みベクトルを重み行列$\boldsymbol{W}$（$K$ × $f$サイズ）に、バイアスをベクトル$\boldsymbol{b}$にまとめる
+        \\これにより、全クラスの予測確率を一括で計算できる
+        \begin{equation*}
+            \boldsymbol{\hat{y}} = softmax(\boldsymbol{W} \boldsymbol{x} + \boldsymbol{b})
+        \end{equation*}
     \end{alertblock}
-\end{frame}
-
-\begin{frame}
-    \frametitle{4.7: 多項ロジスティック回帰}
     \begin{alertblock}{プロトタイプとしての解釈}
-       重み行列$W$の各行$w_k$は、そのクラスのプロトタイプ（典型例）と見なすことができる
-       \\入力ベクトル$x$と各クラスの重み$w_k$の内積は類似度として機能する
-       \\入力$x$が$K$個のプロトタイプのどれに最も似ているかを学習しているといえる 
+        重み行列$\boldsymbol{W}$の各行$w_k$は、そのクラス$k$のプロトタイプ（典型的な例）として解釈できる
+        \\$w_k \cdot x$は、類似度関数として機能し、入力$x$がどのクラスのプロトタイプに最も近いかを計算していることになる
     \end{alertblock}
 \end{frame}
 
@@ -890,6 +898,11 @@
         \\例えば、感情分析において「感嘆符（！）」という特徴量は、ポジティブクラスとネガティブクラスには正の重みを持ち、ニュートラルクラスには負の重みを持つ、といったことが可能
         \\このように、特徴量の重みが入力$x$と出力クラス$y$の両方に依存することを明示するため、特徴量を$f(x, y)$と表記することもある
     \end{alertblock}
+    \begin{multicols}{2}
+        \centering
+        \includegraphics[scale=0.35]{etc/fig4.6.1.png}
+        \includegraphics[scale=0.35]{etc/fig4.6.2.png}
+    \end{multicols}
 \end{frame}
 
 % Sction 4.8 --------------------------------------------------------------
