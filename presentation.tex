@@ -268,7 +268,7 @@
 \begin{frame}
     \frametitle{4.2: シグモイド関数}
     \begin{alertblock}{確率の定義}
-        シグモイド関数を適用することで、書くクラスの確率を以下のように定義する
+        シグモイド関数を適用することで、各クラスの確率を以下のように定義する
         \begin{eqnarray*}
             P(y = 1) &=& \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
             P(y = 0) &=& 1 - \sigma(\boldsymbol{w} \cdot \boldsymbol{x} + b) \\
@@ -577,6 +577,16 @@
 \begin{frame}
     \frametitle{4.5: 交差エントロピー損失関数}
     \begin{alertblock}{具体的な計算例}
+        映画レビューの感情分析（スライドP9999）を例にとると、以下のようになる
+        \centering
+        \includegraphics[scale=0.55]{etc/4-3table.png}
+        \includegraphics[scale=0.5]{etc/fig4.2.png}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.5: 交差エントロピー損失関数}
+    \begin{alertblock}{具体的な計算例}
         \begin{itemize}
             \item 正解が「肯定的（$y = 1$）」で、モデルの予測が$0.70$の場合\\
             \begin{eqnarray*}
@@ -593,7 +603,6 @@
 \begin{frame}
     \frametitle{4.5: 交差エントロピー損失関数}
     \begin{alertblock}{具体的な計算例}
-        映画レビューの感情分析（スライドP9999）を例にとると、以下のようになる
         \begin{itemize}
             \item 実際には「否定的（$y = 0$）」だった場合：\\
             \begin{eqnarray*}
@@ -792,16 +801,14 @@
     \frametitle{4.8:多項ロジスティック回帰における学習}
     \begin{alertblock}{負の対数尤度損失}
         1つの事例$x$に対する損失$L_{CE}$は、全クラスにわたる和として以下のように定義される
-        \begin{equation}
-            L_{CE}(\hat{y}, y) = - \sum_{k = 1}^K y_k log \hat{y_k}
-        \end{equation}
-
+        \begin{eqnarray*}
+            L_{CE}(\boldsymbol{\hat{y}}, \boldsymbol{y}) &=& - \sum_{k = 1}^K y_k \log \hat{y_k} \\
+                                                         &=& 0 + 0 + ... + (- \log \hat{y_c}) + ... + 0\\
+                                                         &=& - \log \hat{p}(y_c = 1|x) \\
+                                                         &=& - \log \frac{\exp(\boldsymbol{w}_c \cdot \boldsymbol{x} + b_c)}{\sum_{j=1}^{K} \exp(\boldsymbol{w}_j \cdot \boldsymbol{x} + b_j)}
+        \end{eqnarray*}
         $y$はone-hotベクトルであるため、正解クラス$c$以外の項は全て0になる。そのため、この式は最終的に、
         「正解クラスに対する予測確率の負の対数」のみとなる。
-        \begin{equation}
-            L_{CE}(\hat{y}, y) = - log \hat{y_k}
-        \end{equation}
-
         このため、多項ロジスティック回帰の損失関数は、一般に負の対数尤度損失と呼ばれる
     \end{alertblock}
 \end{frame}
@@ -812,7 +819,7 @@
         勾配降下法を用いて重みを更新するために、損失関数の勾配（微分）を計算する
         \\特定のクラス$k$の$i$番目の重み$w_{k,i}$に関する偏微分は、以下のような直感的な式で表される
         \begin{equation}
-            \frac{\partial L_{CE}}{\partial w_{k, i}} = -(y_k - \hat{y)k})x_i
+            \frac{\partial L_{CE}}{\partial w_{k, i}} = -(y_k - \hat{y}_k) x_i
         \end{equation}
 
         これは、クラス$k$の正解（0または1）と予測確率の差に入力値$x_i$をかけたものであり、２値ロジスティック回帰の勾配と本質的に同じ形式である
@@ -845,7 +852,7 @@
     \begin{alertblock}{混同行列}
         分類システムの性能を可視化するために、人間の手による正解ラベル（gold label）とシステムの出力を評価する混同行列という表を作成する
         \begin{itemize}
-            \item 真陽性（True Positive / TP）ヒット率
+            \item 真陽性（True Positive / TP
             \item 偽陽性（False Positive / FP）
             \item 偽陰性（False Negative / FN）
             \item 真陰性（True Negative / TN）
@@ -860,7 +867,7 @@
     \begin{alertblock}{正解率（Accuracy）とその限界}
         正解率：全事例のうち、システムが正しく判定した割合
         \\一見自然な指標に見えるが、クラスの頻度が不均衡な場合には適さない
-        \\例えば、100万件のツイートのうち特定の話題が100件しかない場合、全てを「その話題ではない」と判定する無能な分類器でも99.99正解率を出せてしまう
+        \\例えば、100万件のツイートのうち特定の話題が100件しかない場合、全てを「その話題ではない」と判定する無能な分類器でも99.99\%の正解率を出せてしまう
     \end{alertblock}
 \end{frame}
 
@@ -878,6 +885,7 @@
                 Recall = \frac{TP}{TP + FN}
             \end{equation*}
         \end{itemize}
+        これらの指標は、無能な分類器（全て「負」と出すもの）では値が０となり、正解率のように騙されることがない
     \end{alertblock}
 \end{frame}
 
@@ -887,7 +895,7 @@
         F値：適合率と再現率を1つの指標にまとめたもの
         \\一般的には、両者を等しく重視するF1スコアが使われる
         \\F1スコア：適合率と再現率の調和平均
-        \\算術平均ではなく調和平均を使うのは、どちらか一方が教区単に低い場合に、より保守的（低い値）に評価するため
+        \\算術平均ではなく調和平均を使うのは、どちらか一方が極端に低い場合に、より保守的（低い値）に評価するため
     \end{alertblock}
 \end{frame}
 
@@ -901,6 +909,34 @@
             \item マイクロ平均\\全クラスの決定を1つの混同行列に合算してから指標を計算する
             \\出現頻度の高いクラスの影響を強く受ける
         \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
+    \begin{alertblock}{マクロ平均とマイクロ平均の使い分けの基準}
+        「各クラスを平等に評価したいか」、あるいは「個々の判定の正確性を重視したいか」
+        \begin{itemize}
+            \item マクロ平均\\例：どの病気も見逃してはいけない診断システム
+            \begin{itemize}
+                \item 全てのクラスを等しく重要とみなす場合%データセット内での出現頻度に関わらず、各クラスの性能を平等に反映したい時に適する
+                \item 低頻度クラスの性能を重視する場合%データの少ないクラスでの失敗が全体に大きく影響する。これより、小さなクラスの統計をよりよく反映する
+            \end{itemize}
+            \item マイクロ平均\\例：メールの大半がスパムで効率よく処理したい場合
+            \begin{itemize}
+                \item クラスの頻度（出現頻度）に偏りがある場合
+                \item システム全体の「1回1回の判定」の正確さを知りたい場合
+            \end{itemize}
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
+    \begin{alertblock}{多クラス分類の評価}
+        \centering
+        \includegraphics[scale=0.5]{etc/fig4.8.png}
+        \includegraphics[scale=0.5]{etc/fig4.9.png}
     \end{alertblock}
 \end{frame}
 
@@ -930,7 +966,7 @@
     \begin{alertblock}{標準的な学習とテストの手順}
         テキスト分類の学習・テスト手順は、言語モデルと同様のプロセスを辿る
         \begin{itemize}
-            \item 学習セット\\モデルの学習に使用
+            \item 訓練セット\\モデルの学習に使用
             \item 開発テストセット\\パラメータの調整や、最適なモデルを選択するために使用
             \item テストセット\\最終的なモデルの性能を報告するために使用される、それまで一度も見ていないデータ
         \end{itemize}
@@ -946,9 +982,17 @@
             \item 手順：データを$k$個の互いに素なサブセット（フォールド）に分割する
             \item 繰り返し：そのうち1つのフォールドをテスト用、残りの$k-1$個を学習用として使い、これを$k$回繰り返す
             \item 評価：$k$回の実行で得られたエラー率を平均して、最終的な平均値を算出する
-            \item 10分割交差検証：$k=10$とする場合、データの90\%で学習し、10回テストを行ってその値を平均する
         \end{itemize}
     \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.10: テストセットと交差検証}
+    10分割交差検証：$k=10$とする場合、データの90\%で学習し、10回テストを行ってその値を平均する
+    \begin{block}{}      
+        \centering
+        \includegraphics[scale=0.5]{etc/fig4.10.png}
+    \end{block}
 \end{frame}
 
 \begin{frame}
