@@ -4,7 +4,7 @@
 \usepackage{luatexja} % Beamer単体では日本語を出力できないのでこれを使う
 \usepackage{amsmath, amssymb, bm, ascmac, multicol, xcolor}
 \renewcommand{\kanjifamilydefault}{\gtdefault} % 漢字をゴシック体に指定
-\usetheme{metropolis}
+\usetheme{Boadilla}
 \title{輪講発表スライド}
 \author{B4 鈴木青衣}
 \date{\today}
@@ -637,12 +637,17 @@
     \end{block}
 \end{frame}
 
+
+
 \begin{frame}
     \frametitle{4.6: 勾配降下法}
     % この章では、損失関数を最小化し、モデルの最適な重みを決定するための中心ていなアルゴリズムについて解説している
     \begin{alertblock}{勾配降下法の目的と直感}
         \begin{itemize}
-            \item 目標\\全ての事例にわたる平均的な損失関数$L$を最小化するパラメータ$\theta$（重み$w$とバイアス$b$）のセットを見つけること
+            \item 目標\\全ての事例にわたる平均的な損失関数$L$を最小化するパラメータ$\theta = \{ \boldsymbol{w}, b\}$を見つけること
+            \begin{equation*}
+                \hat{\theta} = \underset{\theta}{\operatorname{argmin}} \frac{1}{m} \sum_{i=1}^m L_{CE} (f((x^{(i)};\hat{\hat{\theta}}), y^{(i)}))
+            \end{equation*}
             \item 直感的なイメージ\\深い谷底へ最も早く降りようとしているハイカー。ハイカーは周囲を見渡し、最も急な斜面を探して、その反対横行へと一歩進む。これを繰り返すことで最小値（谷底）を目指す
         \end{itemize}
     \end{alertblock}
@@ -661,10 +666,51 @@
 
 \begin{frame}
     \frametitle{4.6: 勾配降下法}
+    \begin{alertblock}{重みの更新ルール}
+        勾配降下法は、現在の点における損失関数の勾配（傾き）を計算し、その逆方向にパラメータを移動させる手法
+        \begin{itemize}
+            \item 学習率\\1ステップで移動する大きさ（歩幅）を決定するハイパーパラメータ
+            \item 単一変数の更新式は以下
+            \begin{equation*}
+                w_{t+1} = w_t - \eta \frac{d}{dw} L(f(x;w), y)
+            \end{equation*}
+            \item ベクトル形式の更新式\\N次元のパラメータ$\theta$に対して、各次元の偏微分を並べた勾配ベクトル$\boldsymbol{\nabla}$を用いる
+            \begin{equation*}
+                \theta_{t+1} = \theta_t - \eta \boldsymbol{\nabla L}(f(x;\theta), y)
+            \end{equation*}
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
     \begin{alertblock}{学習率（$\eta$）の役割}
-        学習率（$\eta$）とは、勾配（傾き）の方向にどれだけの歩幅でパラメータを更新するかを決定するハイパーパラメータである
-        \\学習率が高すぎると、最小値を飛び越えてしまう。逆に低すぎると、更新が遅すぎて収束に時間がかかりすぎる
-        \\最初は高い学習率ではじめ、学習が進む（イテレーションを重ねる）について徐々に下げていく手法が一般的
+        \begin{itemize}
+            \item 学習率が高すぎると、最小値を飛び越えてしまう。逆に低すぎると、更新が遅すぎて収束に時間がかかりすぎる
+            \item 最初は高い学習率ではじめ、学習が進む（イテレーションを重ねる）について徐々に下げていく手法が一般的
+        \end{itemize}
+    \end{alertblock}
+    \begin{multicols}{2}
+        \includegraphics[scale=0.5]{etc/fig4.3.png}
+        \includegraphics[scale=0.55]{etc/fig4.4.png}
+    \end{multicols}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
+    \begin{alertblock}{ロジスティック回帰における勾配}
+        ロジスティック回帰の損失関数$L_{CE}$\footnote{$L_{CE} (\hat{y}, y) = -[y \log \sigma (\boldsymbol{w} \cdot \boldsymbol{x} + b) + (1 - y) \log (1 - \sigma (\boldsymbol{w} \cdot \boldsymbol{x} + b))]$}を各重みで微分すると、直感的で計算しやすい形になる
+        \begin{itemize}
+            \item 重み$w_j$に関する勾配
+            \begin{equation*}
+                \frac{\partial L_{CE} (\hat{y}, y)}{\partial w_J} = [\sigma (\boldsymbol{w} \cdot \boldsymbol{x} + b) - y]x_j
+                                                                  = (\hat{y} - y)x_j
+            \end{equation*}
+            \item バイアス$b$に関する勾配\\この式は、「モデルの予測誤差$(\hat{y} - y)$」に入力値$x_j$をかけたものが、重みの調整量になることを示している
+            \begin{equation*}
+                \frac{\partial L_{CE} (\hat{y}, y)}{\partial b} = \sigma (\boldsymbol{w} \cdot \boldsymbol{x} + b) - y = \hat{y} - y
+            \end{equation*}
+        \end{itemize}
     \end{alertblock}
 \end{frame}
 
@@ -682,13 +728,94 @@
 
 \begin{frame}
     \frametitle{4.6: 勾配降下法}
-    \begin{alertblock}{パラメータ更新の数式}
-        パラメータ$\theta$の更新は、以下の式で行われる
-        \begin{equation}
-            \theta_{t+1} = \theta_t - \eta\Delta L
-        \end{equation}
-        $\Delta L $は損失関数の勾配（各変数に関する偏微分のベクトル）であり、微小な変化が全体の損失にどう影響するかを示している
-        \\ロジスティック回帰における重み$w_j$の勾配は、非常に直感的な形式である「（予測値$\hat{y}$ - 正解$y$）× 入力$x_j$」となる
+    \begin{alertblock}{確率的勾配降下法(SGD)}
+        データ全体ではなく、1つの事例ごとに勾配を計算してパラメータを更新するオンラインアルゴリズム
+        \\訓練データ$(x^{(i)}, y^{(i)})$をランダムな順序で取り出し、予測値$\hat{y}^{(i)}$を計算して、勾配$g$の逆方向に$\theta$をわずかに動かす作業を収束するまで繰り返す
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
+    \begin{alertblock}{SGDの具体的な計算例}
+        映画のレビューの感情分析（positive or negative）において、以下のようなケースを想定し、SGDの第一ステップを示す
+        \begin{itemize}
+            \item 特徴量ベクトル$\boldsymbol{x}$
+            \begin{itemize}
+                \item $x_1 = 3$（ポジティブな単語の数）
+                \item $x_2 = 2$（ネガティブな単語の数）
+            \end{itemize}
+            \item その他の初期値
+            \begin{itemize}
+                \item $w_1 = w_2 = 0$
+                \item $b = 0$
+                \item つまり$\boldsymbol{\theta}$の初期値は0
+                \item $\eta = 0.1$
+            \end{itemize}
+        \end{itemize}
+        なお、パラメータ$\boldsymbol{\theta}$の更新式は以下の通りであった
+        \begin{equation*}
+            \theta^{t+1} = \theta^t - \eta \boldsymbol{\nabla_{\theta} L}(f(x^{(i)};\boldsymbol{\theta}, y^{(i)}))
+        \end{equation*}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}
+    \frametitle{4.6: 勾配降下法}
+    \begin{alertblock}{SGDの具体的な計算例}
+        \begin{eqnarray*}
+            \boldsymbol{\nabla_{w, b} L} &=& 
+            \begin{bmatrix}
+                \frac{\partial L_{CE} (\hat{y}, y)}{\partial w_1} \\
+                \frac{\partial L_{CE} (\hat{y}, y)}{\partial w_2} \\
+                \frac{\partial L_{CE} (\hat{y}, y)}{\partial b}
+            \end{bmatrix} 
+            =
+            \begin{bmatrix}
+                (\sigma (\boldsymbol{w} \cdot \boldsymbol{x} + b) - y)x_1 \\
+                (\sigma (\boldsymbol{w} \cdot \boldsymbol{x} + b) - y)x_2 \\
+                (\sigma \boldsymbol{w} \cdot \boldsymbol{x} + b) - y
+            \end{bmatrix}
+            =
+            \begin{bmatrix}
+                (\sigma (0) - 1)x_1\\
+                (\sigma (0) - 1)x_2\\
+                \sigma (0) - 1
+            \end{bmatrix} \\
+            &=&
+            \begin{bmatrix}
+                -0.5x_1\\
+                -0.5x_2\\
+                -0.5
+            \end{bmatrix}
+            =
+            \begin{bmatrix}
+                -1.5\\
+                -1.0\\
+                -0.5
+            \end{bmatrix}
+        \end{eqnarray*}
+        これを$\boldsymbol{\theta}$の更新式に代入すると以下のようになる
+        \begin{equation*}
+            \boldsymbol{\theta}^1 = 
+            \begin{bmatrix}
+                w_1\\
+                w_2\\
+                b
+            \end{bmatrix}
+            - \eta
+            \begin{bmatrix}
+                -1.5\\
+                -1.0\\
+                -0.5
+            \end{bmatrix}
+            =
+            \begin{bmatrix}
+                .15\\
+                .1\\
+                .05
+            \end{bmatrix}
+        \end{equation*}
+        これより、それぞれの変数は$w_1 = .15, w_2 = .1, b = .05$に更新された
     \end{alertblock}
 \end{frame}
 
@@ -857,9 +984,9 @@
             \item 偽陰性（False Negative / FN）
             \item 真陰性（True Negative / TN）
         \end{itemize}
-        \centering
-        \includegraphics[scale=0.4]{etc/評価指標.png}
     \end{alertblock}
+    \centering
+    \includegraphics[scale=0.4]{etc/評価指標.png}
 \end{frame}
 
 \begin{frame}
@@ -933,11 +1060,10 @@
 
 \begin{frame}
     \frametitle{4.9: 評価指標について（適合率, 再現率, F値）}
-    \begin{alertblock}{多クラス分類の評価}
-        \centering
-        \includegraphics[scale=0.5]{etc/fig4.8.png}
-        \includegraphics[scale=0.5]{etc/fig4.9.png}
-    \end{alertblock}
+    \centering
+    \includegraphics[scale=0.5]{etc/fig4.8.png}
+    \includegraphics[scale=0.5]{etc/fig4.9.png}
+
 \end{frame}
 
 % Sction 4.10 --------------------------------------------------------------
@@ -988,11 +1114,11 @@
 
 \begin{frame}
     \frametitle{4.10: テストセットと交差検証}
-    10分割交差検証：$k=10$とする場合、データの90\%で学習し、10回テストを行ってその値を平均する
-    \begin{block}{}      
-        \centering
-        \includegraphics[scale=0.5]{etc/fig4.10.png}
-    \end{block}
+    \begin{alertblock}{10分割交差検証}    
+        $k=10$とする場合、データの90\%で学習し、10回テストを行ってその値を平均する
+    \end{alertblock}
+    \centering
+    \includegraphics[scale=0.5]{etc/fig4.10.png}
 \end{frame}
 
 \begin{frame}
